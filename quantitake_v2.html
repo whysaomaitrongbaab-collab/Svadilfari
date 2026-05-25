@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuantiTake — Structural Quantity Takeoff</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#030712; --surface:#0a0f1e; --surface2:#0f172a; --border:#1e293b;
+  --accent:#22d3ee; --accent2:#0ea5e9; --green:#10b981; --yellow:#f59e0b;
+  --red:#ef4444; --text:#f1f5f9; --muted:#64748b; --dim:#334155;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Sora',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(34,211,238,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(34,211,238,.03) 1px,transparent 1px);
+  background-size:48px 48px;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes glow{0%,100%{box-shadow:0 0 16px #22d3ee28}50%{box-shadow:0 0 32px #22d3ee55}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--surface)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* HEADER */
+header{
+  position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 32px;background:rgba(3,7,18,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);
+}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:20px}
+.logo-title{font-weight:800;font-size:16px;letter-spacing:-.03em}
+.logo-sub{color:var(--muted);font-size:11px;margin-top:1px}
+#status-pill{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* PHASE STEPS */
+.phase-bar{display:flex;align-items:center;gap:0;margin-bottom:4px}
+.phase-step{display:flex;align-items:center;gap:8px;flex:1}
+.phase-num{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;border:2px solid var(--border);color:var(--muted);background:var(--surface2);
+  transition:all .3s;flex-shrink:0;
+}
+.phase-step.active .phase-num{border-color:var(--accent);color:var(--accent);background:#22d3ee18}
+.phase-step.done .phase-num{border-color:var(--green);color:var(--green);background:#10b98118}
+.phase-label{font-size:11px;font-weight:600;color:var(--muted);transition:color .3s}
+.phase-step.active .phase-label{color:var(--accent)}
+.phase-step.done .phase-label{color:var(--green)}
+.phase-line{width:32px;height:2px;background:var(--border);margin:0 6px;flex-shrink:0;transition:background .3s}
+.phase-line.done{background:var(--green)}
+
+/* LAYOUT */
+main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:32px 20px 80px;display:flex;flex-direction:column;gap:24px;animation:fadeUp .5s ease both}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px 24px;transition:border-color .2s}
+.card:focus-within{border-color:#22d3ee44}
+.section-label{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.step-num{width:24px;height:24px;border-radius:50%;background:#22d3ee18;border:1px solid #22d3ee44;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:var(--accent);flex-shrink:0}
+.section-label>span:last-child{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8}
+
+/* INPUTS */
+.key-row{display:flex;gap:8px}
+.key-input{flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;font-family:'JetBrains Mono',monospace;transition:border-color .2s}
+.key-input:focus{border-color:var(--accent)}
+.key-toggle{background:var(--border);border:none;border-radius:8px;padding:0 14px;color:var(--muted);cursor:pointer;font-size:16px}
+.key-hint{color:var(--dim);font-size:11px;margin-top:8px}
+details{margin-top:12px}
+summary{color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;user-select:none;list-style:none}
+summary::marker,summary::-webkit-details-marker{display:none}
+.deploy-guide{margin-top:10px;background:var(--surface2);border-radius:8px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8;line-height:2;border:1px solid var(--border)}
+
+#drop-zone{border:2px dashed var(--border);border-radius:14px;padding:40px 24px;text-align:center;cursor:pointer;background:var(--surface2);transition:all .25s}
+#drop-zone:hover,#drop-zone.drag{border-color:var(--accent);background:#22d3ee08}
+#drop-zone.has-file{border-color:var(--green);background:#10b98108;border-style:solid}
+#drop-zone input{display:none}
+.dz-icon{font-size:36px;margin-bottom:10px}
+.dz-title{font-weight:700;font-size:14px;color:#cbd5e1}
+.dz-sub{font-size:12px;color:var(--muted);margin-top:6px}
+.dz-file{font-weight:700;font-size:14px;color:var(--green)}
+.dz-size{font-size:12px;color:var(--muted);margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;user-select:none}
+.chip.active{border-color:var(--accent);background:#22d3ee18;color:var(--accent)}
+.chip .chip-sub{opacity:.5;font-size:10px}
+textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:13px;resize:vertical;outline:none;font-family:inherit;transition:border-color .2s;min-height:80px}
+textarea:focus{border-color:var(--accent)}
+
+/* BUTTONS */
+.btn-primary{width:100%;padding:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--bg);border:none;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit;transition:all .2s;animation:glow 3s ease-in-out infinite;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-primary:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.1)}
+.btn-primary:disabled{background:var(--surface2);color:var(--dim);border:1px solid var(--border);animation:none;cursor:not-allowed}
+.btn-secondary{padding:11px 24px;background:var(--surface2);color:var(--text);border:1.5px solid var(--border);border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-green{padding:11px 28px;background:linear-gradient(135deg,var(--green),#059669);color:#fff;border:none;border-radius:10px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;transition:all .2s;display:inline-flex;align-items:center;gap:8px;animation:glow 3s ease-in-out infinite}
+.btn-green:hover{transform:translateY(-1px);filter:brightness(1.1)}
+
+/* MISC */
+#error-box{display:none;background:#ef444412;border:1px solid #ef444430;border-radius:10px;padding:14px 18px;color:#fca5a5;font-size:13px}
+#progress{display:none;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+.progress-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 1.2s ease-in-out infinite;flex-shrink:0}
+#progress-msg{font-size:13px;color:#94a3b8;font-weight:600}
+
+/* ── PHASE 2: REVIEW ── */
+#review-section{display:none;animation:fadeUp .4s ease both}
+.review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.review-title{font-size:13px;font-weight:700;color:#94a3b8;letter-spacing:.08em;text-transform:uppercase}
+.review-hint{font-size:12px;color:var(--muted);margin-bottom:20px;padding:10px 14px;background:var(--surface2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+
+/* element edit card */
+.el-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden;transition:border-color .2s}
+.el-card:hover{border-color:#22d3ee33}
+.el-card-header{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:#080e1c;border-bottom:1px solid var(--border)}
+.el-id-input{background:transparent;border:none;outline:none;font-family:'Sora',sans-serif;font-size:15px;font-weight:800;color:var(--accent);width:80px;letter-spacing:-.02em}
+.el-type-badge{font-size:10px;font-weight:700;color:var(--muted);background:var(--border);padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.06em}
+.el-delete{background:none;border:none;color:var(--dim);cursor:pointer;font-size:16px;padding:4px 8px;border-radius:6px;transition:all .2s}
+.el-delete:hover{background:#ef444420;color:var(--red)}
+.el-body{padding:16px 18px}
+
+/* field grid */
+.field-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.field-group{display:flex;flex-direction:column;gap:5px}
+.field-label{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.field-input{
+  background:var(--surface);border:1.5px solid var(--border);border-radius:8px;
+  padding:9px 12px;color:var(--text);font-size:13px;font-family:'JetBrains Mono',monospace;
+  outline:none;transition:border-color .2s;width:100%;
+}
+.field-input:focus{border-color:var(--accent)}
+.field-input.estimated{border-color:var(--yellow);color:var(--yellow)}
+.field-unit{font-size:10px;color:var(--dim);margin-top:3px}
+
+/* steel section */
+.steel-section{border-top:1px solid var(--border);padding-top:14px;margin-top:4px}
+.steel-section-title{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.steel-row{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px}
+.steel-pos{font-size:11px;font-weight:700;color:var(--muted);min-width:64px}
+.steel-input{background:var(--surface);border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-size:12px;font-family:'JetBrains Mono',monospace;outline:none;transition:border-color .2s;width:100%}
+.steel-input:focus{border-color:var(--accent)}
+.steel-between{font-size:12px;color:var(--dim);text-align:center}
+
+/* DB / RB toggle */
+.bar-type-toggle{display:inline-flex;border-radius:6px;overflow:hidden;border:1.5px solid var(--border);flex-shrink:0}
+.bar-type-btn{padding:5px 9px;font-size:11px;font-weight:800;background:transparent;border:none;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s;letter-spacing:.03em}
+.bar-type-btn.active-db{background:#22d3ee22;color:var(--accent)}
+.bar-type-btn.active-rb{background:#f59e0b22;color:var(--yellow)}
+.estimated-badge{font-size:9px;font-weight:700;color:var(--yellow);background:#f59e0b18;border:1px solid #f59e0b40;padding:2px 6px;border-radius:4px;margin-left:8px}
+
+/* add element */
+.add-el-btn{width:100%;padding:12px;border:2px dashed var(--border);border-radius:12px;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.add-el-btn:hover{border-color:var(--accent);color:var(--accent);background:#22d3ee08}
+
+.review-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:8px;flex-wrap:wrap}
+
+/* ── CALC OPTIONS ── */
+.calc-options-box{background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;padding:16px 18px;margin-top:20px}
+.calc-options-title{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.calc-options-title::before{content:'⚙️'}
+.calc-chips{display:flex;flex-wrap:wrap;gap:8px}
+.calc-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;user-select:none;line-height:1}
+.calc-chip .cc-icon{font-size:14px}
+.calc-chip .cc-sub{font-size:10px;opacity:.5;margin-left:2px}
+.calc-chip.active{border-color:var(--accent);background:#22d3ee18;color:var(--accent)}
+.calc-chip.active-green{border-color:var(--green);background:#10b98118;color:var(--green)}
+.calc-chip.active-yellow{border-color:var(--yellow);background:#f59e0b18;color:var(--yellow)}
+
+/* ── PHASE 3: RESULT ── */
+#result-section{display:none;animation:fadeUp .4s ease both}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.summary-cell{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+.s-val{font-size:22px;font-weight:800;letter-spacing:-.03em;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.s-unit{font-size:11px;color:var(--muted);margin-top:2px}
+.s-label{font-size:11px;color:var(--dim);margin-top:6px;font-weight:600}
+.beam-cards{display:flex;flex-direction:column;gap:14px}
+.beam-card{background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s}
+.beam-card:hover{border-color:#22d3ee33}
+.beam-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#080e1c;border-bottom:1px solid var(--border);cursor:pointer}
+.beam-id-block{display:flex;align-items:center;gap:10px}
+.beam-id{font-size:15px;font-weight:800;color:var(--accent)}
+.beam-size{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);background:var(--border);padding:3px 8px;border-radius:6px}
+.beam-chevron{color:var(--muted);transition:transform .2s;font-size:12px}
+.beam-card.open .beam-chevron{transform:rotate(180deg)}
+.beam-body{display:none;padding:16px 18px}
+.beam-card.open .beam-body{display:block}
+.qty-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.qty-pill{display:flex;flex-direction:column;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;min-width:90px}
+.qp-val{font-size:16px;font-weight:800;color:var(--text)}
+.qp-unit{font-size:10px;color:var(--accent);font-weight:700;margin-top:1px}
+.qp-label{font-size:10px;color:var(--muted);margin-top:4px}
+.steel-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.steel-table th{background:#080e1c;color:var(--muted);font-weight:700;padding:7px 10px;text-align:left;font-size:10px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.steel-table td{padding:7px 10px;border-bottom:1px solid #0f172a;color:#cbd5e1}
+.steel-table tr:last-child td{border-bottom:none}
+.steel-table tr:hover td{background:#0f172a55}
+.result-topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.result-title-txt{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8}
+.copy-btn{background:var(--border);border:none;border-radius:6px;padding:6px 16px;font-size:11px;font-weight:700;color:#94a3b8;cursor:pointer;font-family:inherit;transition:all .2s}
+.copy-btn:hover{background:var(--dim)}
+.copy-btn.copied{background:var(--green);color:#fff}
+.result-actions{display:flex;gap:10px}
+.warn-box{background:#f59e0b12;border:1px solid #f59e0b30;border-radius:8px;padding:10px 14px;color:#fcd34d;font-size:12px;margin-bottom:14px}
+
+/* steel by dia */
+.dia-breakdown{margin-top:10px;display:flex;flex-direction:column;gap:4px;width:100%;text-align:left}
+.dia-row{display:flex;justify-content:space-between;align-items:center;padding:3px 6px;background:#22d3ee0a;border-radius:5px}
+.dia-tag{font-size:10px;font-weight:800;color:var(--accent);letter-spacing:.04em}
+.dia-kg{font-size:11px;font-weight:700;color:#94a3b8}
+.qty-pill-dia{border-color:#22d3ee33;min-width:72px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">📐</div>
+    <div>
+      <div class="logo-title">QuantiTake</div>
+      <div class="logo-sub">Structural Quantity Takeoff · Gemini Vision</div>
+    </div>
+  </div>
+  <div id="status-pill">
+    <div class="dot" id="status-dot" style="background:#334155"></div>
+    <span id="status-text">Ready</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- PHASE BAR -->
+  <div class="phase-bar" id="phase-bar">
+    <div class="phase-step active" id="ps-1">
+      <div class="phase-num">1</div>
+      <div class="phase-label">Upload & Config</div>
+    </div>
+    <div class="phase-line" id="pl-1"></div>
+    <div class="phase-step" id="ps-2">
+      <div class="phase-num">2</div>
+      <div class="phase-label">Review & Edit</div>
+    </div>
+    <div class="phase-line" id="pl-2"></div>
+    <div class="phase-step" id="ps-3">
+      <div class="phase-num">3</div>
+      <div class="phase-label">Results</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ PHASE 1 ═══════════ -->
+  <div id="phase1">
+
+    <!-- STEEL CALC PROJECT BANNER (shown only when opened from index.html) -->
+    <div class="card" id="sc-project-banner" style="display:none;border-color:#22d3ee55;background:linear-gradient(135deg,#0a0f1e,#0e2a33)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:22px">🔗</div>
+        <div style="flex:1">
+          <div style="font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase">เชื่อมกับ Steel Calc — โปรเจกต์</div>
+          <div style="font-size:15px;font-weight:700;color:var(--accent)" id="sc-project-name">—</div>
+        </div>
+        <div style="font-size:11px;color:var(--green)">● พร้อมบันทึกกลับ</div>
+      </div>
+    </div>
+
+    <!-- UPLOAD -->
+    <div class="card">
+      <div class="section-label"><div class="step-num">1</div><span>Upload Drawing</span></div>
+      <div id="drop-zone" onclick="document.getElementById('file-input').click()"
+           ondragover="onDragOver(event)" ondragleave="onDragLeave()" ondrop="onDrop(event)">
+        <input type="file" id="file-input" accept=".pdf,image/jpeg,image/png,image/webp" onchange="onFileChange(event)">
+        <div class="dz-icon" id="dz-icon">⬆️</div>
+        <div id="dz-main">
+          <div class="dz-title">Drop drawing here or click to upload</div>
+          <div class="dz-sub">PDF · JPG · PNG · WEBP</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ELEMENTS -->
+    <div class="card">
+      <div class="section-label"><div class="step-num">2</div><span>Structural Elements</span></div>
+        <div class="chips" id="element-chips">
+        <div class="chip" data-id="beam"    onclick="toggleChip(this)">━ Beam <span class="chip-sub">คาน</span></div>
+        <div class="chip" data-id="column"  onclick="toggleChip(this)">┃ Column <span class="chip-sub">เสา</span></div>
+        <div class="chip" data-id="slab"    onclick="toggleChip(this)">▬ Slab <span class="chip-sub">พื้น</span></div>
+        <div class="chip" data-id="footing" onclick="toggleChip(this)">⬛ Footing <span class="chip-sub">ฐานราก</span></div>
+      </div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="card">
+      <div class="section-label"><div class="step-num">3</div><span>Special Instructions (optional)</span></div>
+      <textarea id="extra-note" rows="3" placeholder="เช่น: คำนวณเฉพาะ B1, ไม่ต้อง secondary beam, ใช้ fc'=280 ksc..."></textarea>
+    </div>
+
+    <!-- PROGRESS -->
+    <div id="progress">
+      <div class="progress-dot"></div>
+      <span id="progress-msg">Processing…</span>
+    </div>
+
+    <!-- RUN -->
+    <button class="btn-primary" id="run-btn" onclick="runRead()">🔍 Read Drawing with AI</button>
+    <div id="error-box"></div>
+
+  </div><!-- /phase1 -->
+
+  <!-- ═══════════ PHASE 2: REVIEW ═══════════ -->
+  <div id="review-section">
+    <div class="review-header">
+      <div class="review-title">✏️ Review & Edit — ตรวจสอบค่าที่ AI อ่านได้</div>
+      <button class="btn-secondary" onclick="goBack()">← แก้ไฟล์ใหม่</button>
+    </div>
+    <div class="review-hint">
+      🟡 <b>สีเหลือง</b> = AI ไม่แน่ใจ ควรตรวจสอบ · แก้ไขตัวเลขได้ทุกช่อง · กด <b>+ Add Element</b> เพื่อเพิ่มหน้าตัดที่ AI อ่านไม่ได้
+    </div>
+    <div id="el-cards-container"></div>
+    <button class="add-el-btn" onclick="addElement()">+ Add Element</button>
+
+    <!-- CALC OPTIONS -->
+    <div class="calc-options-box">
+      <div class="calc-options-title">เลือกรายการที่ต้องการคำนวณ</div>
+      <div class="calc-chips" id="calc-chips">
+        <div class="calc-chip active active-green" data-calc="concrete" onclick="toggleCalcChip(this)">
+          <span class="cc-icon">🧱</span> Volume Concrete <span class="cc-sub">m³</span>
+        </div>
+        <div class="calc-chip active active-yellow" data-calc="formwork" onclick="toggleCalcChip(this)">
+          <span class="cc-icon">🪵</span> Formwork <span class="cc-sub">m²</span>
+        </div>
+        <div class="calc-chip active" data-calc="steel" onclick="toggleCalcChip(this)">
+          <span class="cc-icon">🔩</span> Rebar / Steel <span class="cc-sub">kg</span>
+        </div>
+        <div class="calc-chip" data-calc="stirrup" onclick="toggleCalcChip(this)">
+          <span class="cc-icon">〰️</span> Stirrup Detail <span class="cc-sub">kg</span>
+        </div>
+        <div class="calc-chip" data-calc="bar_schedule" onclick="toggleCalcChip(this)">
+          <span class="cc-icon">📋</span> Bar Schedule <span class="cc-sub">ตาราง</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-actions" style="margin-top:20px">
+      <button class="btn-green" onclick="runCalculate()">⚡ Calculate Quantities</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ PHASE 3: RESULT ═══════════ -->
+  <div id="result-section">
+    <div class="result-topbar">
+      <div class="result-title-txt">📊 Quantity Takeoff Result</div>
+      <div class="result-actions">
+        <button class="btn-green" id="sc-save-btn" onclick="saveToSteelCalc()" style="display:none">💾 บันทึกเข้า Steel Calc</button>
+        <button class="copy-btn" id="copy-btn" onclick="copyResult()">Copy Summary</button>
+        <button class="btn-secondary" onclick="goReview()">← Edit Values</button>
+      </div>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-cell"><div class="s-val" id="tot-concrete">—</div><div class="s-unit">m³</div><div class="s-label">Total Concrete</div></div>
+      <div class="summary-cell"><div class="s-val" id="tot-steel">—</div><div class="s-unit">kg</div><div class="s-label">Total Steel</div><div id="steel-dia-breakdown" class="dia-breakdown" style="display:none"></div></div>
+      <div class="summary-cell"><div class="s-val" id="tot-formwork">—</div><div class="s-unit">m²</div><div class="s-label">Total Formwork</div></div>
+    </div>
+    <div class="beam-cards" id="beam-cards"></div>
+  </div>
+
+</main>
+
+<script>
+// 🔑 Hardcoded Gemini key — ผู้ใช้ทั่วไปไม่ต้องกรอกและมองไม่เห็น
+const API_KEY = "AIzaSyCU8Sbb5NsP65DBb-OksgDeMnpxoAwG4X4";
+
+let selectedFile = null;
+let elementsData = []; // array of element objects (editable)
+
+// unit weights kg/m
+const UW = {6:.222,9:.499,10:.617,12:.888,16:1.578,19:2.226,20:2.466,25:3.853,28:4.834,32:6.313};
+const steelUW = d => UW[+d] || (0.006165*d*d);
+
+// ── PHASE CONTROL ─────────────────────────────────────────
+function setPhase(n) {
+  [1,2,3].forEach(i => {
+    const ps = document.getElementById(`ps-${i}`);
+    ps.className = 'phase-step' + (i===n?' active':i<n?' done':'');
+  });
+  [1,2].forEach(i => {
+    const pl = document.getElementById(`pl-${i}`);
+    if(pl) pl.className = 'phase-line' + (i<n?' done':'');
+  });
+  document.getElementById('phase1').style.display        = n===1?'flex':'none';
+  document.getElementById('phase1').style.flexDirection  = 'column';
+  document.getElementById('phase1').style.gap            = '24px';
+  document.getElementById('review-section').style.display= n===2?'block':'none';
+  document.getElementById('result-section').style.display= n===3?'block':'none';
+}
+
+function goBack()   { setPhase(1); }
+function goReview() { renderReview(); setPhase(2); }
+
+// ── STATUS ────────────────────────────────────────────────
+function setStatus(s) {
+  const dot=document.getElementById('status-dot'), txt=document.getElementById('status-text');
+  const m={ready:['#334155','Ready'],loading:['#22d3ee','Analyzing…'],review:['#f59e0b','Review'],done:['#10b981','Complete'],error:['#ef4444','Error']};
+  const [c,l]=m[s]||m.ready;
+  dot.style.background=c; dot.style.boxShadow=s==='loading'?`0 0 6px ${c}`:'none';
+  txt.textContent=l; txt.style.color=c;
+}
+function showError(msg){const el=document.getElementById('error-box');el.style.display='block';el.innerHTML='⚠️ '+msg;setStatus('error');}
+function hideError(){document.getElementById('error-box').style.display='none';}
+function setProgress(msg){const el=document.getElementById('progress');if(msg){el.style.display='flex';document.getElementById('progress-msg').textContent=msg;}else{el.style.display='none';}}
+function getActiveChips(id){return[...document.querySelectorAll(`#${id} .chip.active`)].map(c=>c.dataset.id);}
+function fileToBase64(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});}
+function toggleKey(){/* API key UI removed — key is hardcoded */}
+function onDragOver(e){e.preventDefault();document.getElementById('drop-zone').classList.add('drag');}
+function onDragLeave(){document.getElementById('drop-zone').classList.remove('drag');}
+function onDrop(e){e.preventDefault();document.getElementById('drop-zone').classList.remove('drag');const f=e.dataTransfer.files[0];if(f)setFile(f);}
+function onFileChange(e){if(e.target.files[0])setFile(e.target.files[0]);}
+function setFile(f){selectedFile=f;const dz=document.getElementById('drop-zone');dz.classList.add('has-file');document.getElementById('dz-icon').textContent='📄';document.getElementById('dz-main').innerHTML=`<div class="dz-file">${f.name}</div><div class="dz-size">${(f.size/1024).toFixed(1)} KB · click to replace</div>`;}
+function toggleChip(el){el.classList.toggle('active');}
+
+function toggleCalcChip(el) {
+  el.classList.toggle('active');
+  // Restore color classes based on data-calc when toggling
+  const calc = el.dataset.calc;
+  if (el.classList.contains('active')) {
+    if (calc === 'concrete') el.classList.add('active-green');
+    else if (calc === 'formwork') el.classList.add('active-yellow');
+  } else {
+    el.classList.remove('active-green','active-yellow');
+  }
+}
+
+function getCalcOptions() {
+  return [...document.querySelectorAll('#calc-chips .calc-chip.active')].map(c => c.dataset.calc);
+}
+
+// ── PHASE 1: READ ─────────────────────────────────────────
+async function runRead() {
+  const key=API_KEY.trim();
+  const file=selectedFile;
+  if(!key){showError('ระบบยังไม่ได้ตั้งค่า API Key');return;}
+  if(!file){showError('กรุณา upload ไฟล์ก่อน');return;}
+  const elements=getActiveChips('element-chips');
+  const note=document.getElementById('extra-note').value.trim();
+  if(!elements.length){showError('เลือก element อย่างน้อย 1 อย่าง');return;}
+
+  hideError();
+  setStatus('loading');
+  setProgress('กำลังส่งแบบให้ AI อ่าน…');
+  document.getElementById('run-btn').disabled=true;
+
+  const prompt=`You are a structural engineer. Analyze this structural drawing.
+${note?`\nSPECIAL INSTRUCTIONS (follow these strictly, they override default behavior):\n${note}\n`:''}
+ELEMENT TYPES TO LOOK FOR: ${elements.join(', ')}
+${note?'Extract ONLY the elements matching the special instructions above.':'Extract ALL structural elements found in the drawing.'}
+
+Return ONLY valid JSON — no markdown, no backticks, no explanation.
+
+{
+  "drawing_title": "string",
+  "warnings": ["string"],
+  "elements": [
+    {
+      "id": "B1",
+      "type": "beam",
+      "width": 250,
+      "height": 500,
+      "length": 5.0,
+      "estimated": false,
+      "steel_top":    { "count": 2, "dia": 16, "estimated": false },
+      "steel_bottom": { "count": 2, "dia": 16, "estimated": false },
+      "steel_extra":  [],
+      "stirrup": { "dia": 6, "spacing": 0.10, "type": "DB", "estimated": false }
+    },
+    {
+      "id": "S1",
+      "type": "slab",
+      "width_m": 4.0,
+      "length_slab": 5.0,
+      "thickness": 120,
+      "estimated": false,
+      "steel_main": { "dia": 12, "spacing": 0.20, "type": "DB", "estimated": false },
+      "steel_dist": { "dia": 12, "spacing": 0.20, "type": "DB", "estimated": false }
+    }
+  ]
+}
+
+Rules:
+- For beams/columns: width/height in mm (integer). length in meters (float).
+- For slabs: width_m in meters (float), length_slab in meters, thickness in mm.
+- steel_main = เหล็กยืน (main bar), steel_dist = เหล็กแขวน/กระจาย (distribution bar).
+- steel spacing in meters (e.g. 0.20 for @0.20m).
+- dia in mm integer. bar type: detect "DB" or "RB" from drawing, default "DB".
+- stirrup "type": detect "DB" or "RB". Default "DB". Slab has NO stirrup.
+- Set "estimated":true on any field you're not sure about.
+- If stirrup not visible, set stirrup to null.
+- steel_extra: array of {pos,count,dia,estimated} for beam middle/extra bars only.
+- Include EVERY beam/column/slab/footing section found.`;
+
+  try {
+    setProgress('AI กำลังอ่านแบบ…');
+    const base64=await fileToBase64(file);
+    const mime=file.type==='application/pdf'?'application/pdf':file.type==='image/png'?'image/png':file.type==='image/webp'?'image/webp':'image/jpeg';
+
+    const res=await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
+      {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        contents:[{parts:[{text:prompt},{inline_data:{mime_type:mime,data:base64}}]}],
+        generationConfig:{temperature:0.05,maxOutputTokens:4096}
+      })}
+    );
+    const data=await res.json();
+    if(!res.ok) throw new Error(data?.error?.message||'Gemini API error');
+
+    let raw=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    raw=raw.replace(/```json/gi,'').replace(/```/g,'').trim();
+
+    let parsed;
+    try{parsed=JSON.parse(raw);}
+    catch(e){throw new Error('AI ตอบกลับไม่ถูก format — ลองอัปโหลดรูปที่ชัดกว่านี้');}
+
+    if(!parsed.elements?.length) throw new Error('ไม่พบ element ในแบบ — ลองอัปโหลดรูปที่ชัดกว่านี้');
+
+    elementsData=parsed.elements.map(el=>({...el})); // deep copy
+    renderReview(parsed.warnings||[]);
+    setPhase(2);
+    setStatus('review');
+    setProgress('');
+
+  } catch(err){
+    showError(err.message);
+    setProgress('');
+  } finally {
+    document.getElementById('run-btn').disabled=false;
+  }
+}
+
+// ── PHASE 2: RENDER REVIEW ────────────────────────────────
+function renderReview(warnings=[]) {
+  const container=document.getElementById('el-cards-container');
+  container.innerHTML='';
+
+  if(warnings.length){
+    container.innerHTML+=`<div class="warn-box">⚠️ ${warnings.join(' · ')}</div>`;
+  }
+
+  elementsData.forEach((el,i)=>container.innerHTML+=buildElCard(el,i));
+}
+
+function buildElCard(el,i) {
+  const est=v=>v?'estimated':'';
+  const estBadge=v=>v?'<span class="estimated-badge">EST</span>':'';
+  const isSlab = (el.type||'beam')==='slab';
+
+  const header = `
+  <div class="el-card" id="elcard-${i}">
+    <div class="el-card-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <input class="el-id-input" type="text" value="${el.id}" data-el="${i}" data-field="id" oninput="updateField(this)">
+        ${estBadge(el.estimated)}
+        <span class="el-type-badge">${el.type||'beam'}</span>
+      </div>
+      <button class="el-delete" onclick="deleteElement(${i})" title="ลบ element นี้">✕</button>
+    </div>
+    <div class="el-body">`;
+
+  const footer = `</div></div>`;
+
+  if (isSlab) {
+    // ── SLAB CARD ──
+    return header + `
+      <div class="field-grid">
+        <div class="field-group">
+          <div class="field-label">Width</div>
+          <input class="field-input ${est(el.estimated)}" type="number" min="0" step="0.01" value="${el.width_m||el.width/1000||4}" data-el="${i}" data-field="slab_width_m" oninput="updateField(this)">
+          <div class="field-unit">m</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Length</div>
+          <input class="field-input ${est(el.estimated)}" type="number" min="0" step="0.01" value="${el.length_slab||0}" data-el="${i}" data-field="length_slab" oninput="updateField(this)">
+          <div class="field-unit">m</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Thickness</div>
+          <input class="field-input ${est(el.estimated)}" type="number" min="1" value="${el.thickness||120}" data-el="${i}" data-field="thickness" oninput="updateField(this)">
+          <div class="field-unit">mm</div>
+        </div>
+      </div>
+      <div class="steel-section">
+        <div class="steel-section-title">Reinforcement</div>
+        <div class="steel-row">
+          <div class="steel-pos">Main Bar ${estBadge(el.steel_main?.estimated)}</div>
+          <div style="display:flex;align-items:center;gap:6px;flex:1;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--muted)">${el.steel_main?.type||'DB'}</span>
+            <input class="steel-input ${est(el.steel_main?.estimated)}" type="number" min="6" max="32"
+              value="${el.steel_main?.dia??12}" data-el="${i}" data-field="slab_main_dia" oninput="updateField(this)" style="width:70px">
+            <span style="font-size:11px;color:var(--muted)">@ every</span>
+            <input class="steel-input ${est(el.steel_main?.estimated)}" type="number" min="0.05" max="1" step="0.01"
+              value="${el.steel_main?.spacing??0.20}" data-el="${i}" data-field="slab_main_spacing" oninput="updateField(this)" style="width:70px">
+            <span style="font-size:11px;color:var(--muted)">m</span>
+          </div>
+        </div>
+        <div class="steel-row">
+          <div class="steel-pos">Dist Bar ${estBadge(el.steel_dist?.estimated)}</div>
+          <div style="display:flex;align-items:center;gap:6px;flex:1;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--muted)">${el.steel_dist?.type||'DB'}</span>
+            <input class="steel-input ${est(el.steel_dist?.estimated)}" type="number" min="6" max="32"
+              value="${el.steel_dist?.dia??12}" data-el="${i}" data-field="slab_dist_dia" oninput="updateField(this)" style="width:70px">
+            <span style="font-size:11px;color:var(--muted)">@ every</span>
+            <input class="steel-input ${est(el.steel_dist?.estimated)}" type="number" min="0.05" max="1" step="0.01"
+              value="${el.steel_dist?.spacing??0.20}" data-el="${i}" data-field="slab_dist_spacing" oninput="updateField(this)" style="width:70px">
+            <span style="font-size:11px;color:var(--muted)">m</span>
+          </div>
+        </div>
+      </div>` + footer;
+  }
+
+  // ── BEAM / COLUMN CARD ──
+  let extraHtml='';
+  (el.steel_extra||[]).forEach((s,j)=>{
+    extraHtml+=`
+    <div class="steel-row">
+      <div class="steel-pos">Extra ${j+1}</div>
+      <input class="steel-input ${est(s.estimated)}" type="number" min="1" max="20"
+        value="${s.count||2}" data-el="${i}" data-field="extra_count_${j}" style="width:70px">
+      <div class="steel-between">× DB</div>
+      <input class="steel-input ${est(s.estimated)}" type="number" min="6" max="32"
+        value="${s.dia||16}" data-el="${i}" data-field="extra_dia_${j}" style="width:70px">
+    </div>`;
+  });
+
+  return header + `
+      <div class="field-grid">
+        <div class="field-group">
+          <div class="field-label">Width</div>
+          <input class="field-input ${est(el.estimated)}" type="number" min="1" value="${el.width||250}" data-el="${i}" data-field="width" oninput="updateField(this)">
+          <div class="field-unit">mm</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Height / Depth</div>
+          <input class="field-input ${est(el.estimated)}" type="number" min="1" value="${el.height||500}" data-el="${i}" data-field="height" oninput="updateField(this)">
+          <div class="field-unit">mm</div>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Length</div>
+          <input class="field-input ${est(el.estimated)}" type="number" min="0" step="0.01" value="${el.length||0}" data-el="${i}" data-field="length" oninput="updateField(this)">
+          <div class="field-unit">m</div>
+        </div>
+      </div>
+      <div class="steel-section">
+        <div class="steel-section-title">Reinforcement</div>
+        <div class="steel-row">
+          <div class="steel-pos">Top ${estBadge(el.steel_top?.estimated)}</div>
+          <input class="steel-input ${est(el.steel_top?.estimated)}" type="number" min="0" max="20"
+            value="${el.steel_top?.count??2}" data-el="${i}" data-field="steel_top_count" oninput="updateField(this)" style="width:70px">
+          <div class="steel-between">× DB</div>
+          <input class="steel-input ${est(el.steel_top?.estimated)}" type="number" min="6" max="40"
+            value="${el.steel_top?.dia??16}" data-el="${i}" data-field="steel_top_dia" oninput="updateField(this)" style="width:70px">
+        </div>
+        <div class="steel-row">
+          <div class="steel-pos">Bottom ${estBadge(el.steel_bottom?.estimated)}</div>
+          <input class="steel-input ${est(el.steel_bottom?.estimated)}" type="number" min="0" max="20"
+            value="${el.steel_bottom?.count??2}" data-el="${i}" data-field="steel_bottom_count" oninput="updateField(this)" style="width:70px">
+          <div class="steel-between">× DB</div>
+          <input class="steel-input ${est(el.steel_bottom?.estimated)}" type="number" min="6" max="40"
+            value="${el.steel_bottom?.dia??16}" data-el="${i}" data-field="steel_bottom_dia" oninput="updateField(this)" style="width:70px">
+        </div>
+        ${extraHtml}
+        <div class="steel-row" style="margin-top:6px">
+          <div class="steel-pos">Stirrup ${el.stirrup?estBadge(el.stirrup.estimated):''}</div>
+          <div style="display:flex;align-items:center;gap:6px;flex:1;flex-wrap:wrap">
+            <div class="bar-type-toggle" title="AI จับจากแบบอัตโนมัติ — กดเพื่อแก้ไข">
+              <button class="bar-type-btn ${(el.stirrup?.type||'DB')==='DB'?'active-db':''}"
+                onclick="setStirrupType(${i},'DB',this)">DB</button>
+              <button class="bar-type-btn ${(el.stirrup?.type||'DB')==='RB'?'active-rb':''}"
+                onclick="setStirrupType(${i},'RB',this)">RB</button>
+            </div>
+            <span style="font-size:10px;color:var(--muted);opacity:.6">AI จับอัตโนมัติ</span>
+            <input class="steel-input ${est(el.stirrup?.estimated)}" type="number" min="6" max="25"
+              value="${el.stirrup?.dia??6}" data-el="${i}" data-field="stirrup_dia" oninput="updateField(this)" style="width:65px">
+            <span style="font-size:11px;color:var(--muted)">@ every</span>
+            <input class="steel-input ${est(el.stirrup?.estimated)}" type="number" min="0.05" max="1" step="0.01"
+              value="${el.stirrup?.spacing??0.15}" data-el="${i}" data-field="stirrup_spacing" oninput="updateField(this)" style="width:70px">
+            <span style="font-size:11px;color:var(--muted)">m</span>
+          </div>
+        </div>
+      </div>` + footer;
+}
+
+function updateField(input) {
+  const i=+input.dataset.el, field=input.dataset.field, val=input.value;
+  const el=elementsData[i];
+  if(!el) return;
+  if(field==='id')     { el.id=val; return; }
+  if(field==='width')  { el.width=+val; return; }
+  if(field==='height') { el.height=+val; return; }
+  if(field==='length') { el.length=+val; return; }
+  if(field==='steel_top_count')    { el.steel_top=el.steel_top||{}; el.steel_top.count=+val; return; }
+  if(field==='steel_top_dia')      { el.steel_top=el.steel_top||{}; el.steel_top.dia=+val; return; }
+  if(field==='steel_bottom_count') { el.steel_bottom=el.steel_bottom||{}; el.steel_bottom.count=+val; return; }
+  if(field==='steel_bottom_dia')   { el.steel_bottom=el.steel_bottom||{}; el.steel_bottom.dia=+val; return; }
+  if(field==='stirrup_dia')        { el.stirrup=el.stirrup||{}; el.stirrup.dia=+val; return; }
+  if(field==='stirrup_spacing')    { el.stirrup=el.stirrup||{}; el.stirrup.spacing=+val; return; }
+  if(field==='stirrup_type')       { el.stirrup=el.stirrup||{}; el.stirrup.type=val; return; }
+  if(field==='length_slab')        { el.length_slab=+val; return; }
+  if(field==='slab_width_m')       { el.width_m=+val; return; }
+  if(field==='thickness')          { el.thickness=+val; return; }
+  if(field==='slab_main_dia')      { el.steel_main=el.steel_main||{}; el.steel_main.dia=+val; return; }
+  if(field==='slab_main_spacing')  { el.steel_main=el.steel_main||{}; el.steel_main.spacing=+val; return; }
+  if(field==='slab_dist_dia')      { el.steel_dist=el.steel_dist||{}; el.steel_dist.dia=+val; return; }
+  if(field==='slab_dist_spacing')  { el.steel_dist=el.steel_dist||{}; el.steel_dist.spacing=+val; return; }
+  const extraCount=field.match(/^extra_count_(\d+)$/);
+  const extraDia  =field.match(/^extra_dia_(\d+)$/);
+  if(extraCount) { el.steel_extra[+extraCount[1]].count=+val; }
+  if(extraDia)   { el.steel_extra[+extraDia[1]].dia=+val; }
+}
+
+function setStirrupType(i, type, btn) {
+  const el = elementsData[i];
+  if (!el) return;
+  el.stirrup = el.stirrup || {};
+  el.stirrup.type = type;
+  const toggle = btn.closest('.bar-type-toggle');
+  toggle.querySelectorAll('.bar-type-btn').forEach(b => b.classList.remove('active-db','active-rb'));
+  btn.classList.add(type === 'DB' ? 'active-db' : 'active-rb');
+}
+
+function deleteElement(i) {
+  elementsData.splice(i,1);
+  renderReview();
+}
+
+function addElement() {
+  elementsData.push({
+    id:`B${elementsData.length+1}`, type:'beam',
+    width:250, height:500, length:5.0, estimated:true,
+    steel_top:{count:2,dia:16,estimated:true},
+    steel_bottom:{count:2,dia:16,estimated:true},
+    steel_extra:[],
+    stirrup:{dia:6,spacing:0.15,estimated:true}
+  });
+  renderReview();
+  // scroll to new card
+  setTimeout(()=>{
+    const cards=document.querySelectorAll('.el-card');
+    cards[cards.length-1]?.scrollIntoView({behavior:'smooth',block:'center'});
+  },100);
+}
+
+// ── PHASE 3: CALCULATE ────────────────────────────────────
+function calcElement(el) {
+  const isSlab = (el.type||'beam') === 'slab';
+
+  if (isSlab) {
+    const W  = el.width_m || el.width/1000;
+    const L  = el.length_slab||0;
+    const T  = (el.thickness||120)/1000;
+    const concrete = +(W*L*T).toFixed(4);
+    const formwork = +(W*L).toFixed(4); // soffit only
+    const rows=[];
+    let totalSteel=0;
+
+    const addSlabBar=(pos,barObj,spanLen)=>{
+      if(!barObj?.dia||!barObj?.spacing||!spanLen) return;
+      const {dia,spacing,type='DB'}=barObj;
+      const qty=Math.ceil(spanLen/spacing)+1;
+      const uw=steelUW(dia), kg=+(qty*spanLen*uw).toFixed(2);
+      totalSteel+=kg;
+      rows.push({pos,count:qty,dia,barType:type,len:+spanLen.toFixed(2),uw,kg});
+    };
+    addSlabBar('Main Bar', el.steel_main, L);
+    addSlabBar('Dist Bar', el.steel_dist, W);
+
+    const byDia={};
+    rows.forEach(r=>{ const k=`${r.barType}${r.dia}`; byDia[k]=(byDia[k]||0)+r.kg; });
+    Object.keys(byDia).forEach(k=>{ byDia[k]=+byDia[k].toFixed(2); });
+    return {concrete,formwork,steel:+totalSteel.toFixed(2),rows,byDia};
+  }
+
+  // ── BEAM / COLUMN ──
+  const W=el.width/1000, H=el.height/1000, L=el.length||0, hook=0.3;
+  const concrete=+(W*H*L).toFixed(4);
+  const formwork=+((2*H+W)*L).toFixed(4);
+  const rows=[];
+  let totalSteel=0;
+
+  const addBar=(pos,count,dia,barType='DB')=>{
+    if(!count||!dia) return;
+    const len=+(L+2*hook).toFixed(2), uw=steelUW(dia), kg=+(count*len*uw).toFixed(2);
+    totalSteel+=kg; rows.push({pos,count,dia,barType,len,uw,kg});
+  };
+
+  if(el.steel_top?.count)    addBar('Top',    el.steel_top.count,    el.steel_top.dia);
+  if(el.steel_bottom?.count) addBar('Bottom', el.steel_bottom.count, el.steel_bottom.dia);
+  (el.steel_extra||[]).forEach((s,j)=>{ if(s.count&&s.dia) addBar(`Extra ${j+1}`,s.count,s.dia); });
+
+  if(el.stirrup?.dia&&el.stirrup?.spacing&&L>0){
+    const {dia,spacing,type='DB'}=el.stirrup;
+    const qty=Math.ceil(L/spacing)+1;
+    const cover=0.03, perim=2*((W-2*cover)+(H-2*cover))+8*(dia/1000);
+    const kg=+(qty*perim*steelUW(dia)).toFixed(2);
+    totalSteel+=kg;
+    rows.push({pos:'Stirrup',count:qty,dia,barType:type,len:+perim.toFixed(3),uw:steelUW(dia),kg});
+  }
+
+  const byDia={};
+  rows.forEach(r=>{ const key=`${r.barType||'DB'}${r.dia}`; byDia[key]=(byDia[key]||0)+r.kg; });
+  Object.keys(byDia).forEach(k=>{ byDia[k]=+byDia[k].toFixed(2); });
+  return {concrete,formwork,steel:+totalSteel.toFixed(2),rows,byDia};
+}
+
+function runCalculate() {
+  if(!elementsData.length){alert('ไม่มี element ให้คำนวณ');return;}
+
+  const opts = getCalcOptions();
+  if(!opts.length){alert('กรุณาเลือกรายการคำนวณอย่างน้อย 1 อย่าง');return;}
+
+  const showConcrete  = opts.includes('concrete');
+  const showFormwork  = opts.includes('formwork');
+  const showSteel     = opts.includes('steel') || opts.includes('stirrup');
+  const showBarSched  = opts.includes('bar_schedule');
+  const showStirrUp   = opts.includes('stirrup');
+
+  let totC=0,totS=0,totF=0;
+  const totByDia={};
+  elementsData.forEach(el=>{
+    const c=calcElement(el);
+    totC+=c.concrete; totS+=c.steel; totF+=c.formwork;
+    Object.entries(c.byDia).forEach(([key,kg])=>{ totByDia[key]=(totByDia[key]||0)+kg; });
+  });
+  Object.keys(totByDia).forEach(k=>{ totByDia[k]=+totByDia[k].toFixed(2); });
+
+  // Summary cells visibility
+  const cellConcrete = document.querySelector('.summary-grid .summary-cell:nth-child(1)');
+  const cellSteel    = document.querySelector('.summary-grid .summary-cell:nth-child(2)');
+  const cellFormwork = document.querySelector('.summary-grid .summary-cell:nth-child(3)');
+  cellConcrete.style.display = showConcrete ? '' : 'none';
+  cellSteel.style.display    = showSteel    ? '' : 'none';
+  cellFormwork.style.display = showFormwork ? '' : 'none';
+
+  if(showConcrete) document.getElementById('tot-concrete').textContent=totC.toFixed(3);
+  if(showSteel){
+    document.getElementById('tot-steel').textContent=totS.toFixed(1);
+    // render dia breakdown under the summary cell
+    const diaRows=Object.keys(totByDia).sort((a,b)=>+a.replace(/\D/g,'')-+b.replace(/\D/g,''))
+      .map(d=>`<div class="dia-row"><span class="dia-tag">${d}</span><span class="dia-kg">${totByDia[d]} kg</span></div>`).join('');
+    document.getElementById('steel-dia-breakdown').innerHTML=diaRows;
+    document.getElementById('steel-dia-breakdown').style.display='';
+  } else {
+    document.getElementById('steel-dia-breakdown').style.display='none';
+  }
+  if(showFormwork) document.getElementById('tot-formwork').textContent=totF.toFixed(2);
+
+  const container=document.getElementById('beam-cards');
+  container.innerHTML='';
+  elementsData.forEach((el,i)=>{
+    const c=calcElement(el);
+
+    // Filter bar schedule rows based on options
+    let filteredRows = c.rows;
+    if (!showStirrUp) filteredRows = filteredRows.filter(r => r.pos !== 'Stirrup');
+    if (!showSteel)   filteredRows = [];
+
+    const rows = filteredRows.map(r=>`<tr><td>${r.pos}</td><td>${r.count} × ${r.barType||'DB'}${r.dia}</td><td>${r.len} m</td><td>${r.uw} kg/m</td><td><b>${r.kg} kg</b></td></tr>`).join('');
+
+    const diaPills = showSteel
+      ? Object.keys(c.byDia).sort((a,b)=>+a.replace(/\D/g,'')-+b.replace(/\D/g,'')).map(d=>
+          `<div class="qty-pill qty-pill-dia"><div class="qp-val">${c.byDia[d]}</div><div class="qp-unit">kg</div><div class="qp-label">${d}</div></div>`
+        ).join('')
+      : '';
+
+    const qtyPills = [
+      showConcrete ? `<div class="qty-pill"><div class="qp-val">${c.concrete}</div><div class="qp-unit">m³</div><div class="qp-label">Concrete</div></div>` : '',
+      showFormwork ? `<div class="qty-pill"><div class="qp-val">${c.formwork}</div><div class="qp-unit">m²</div><div class="qp-label">Formwork</div></div>` : '',
+      diaPills,
+    ].join('');
+
+    const tableSection = showBarSched && rows
+      ? `<table class="steel-table"><thead><tr><th>Position</th><th>Bar</th><th>Length/Perim</th><th>Unit Wt</th><th>Weight</th></tr></thead><tbody>${rows}</tbody></table>`
+      : (showBarSched ? '<div style="color:var(--muted);font-size:12px">No steel data</div>' : '');
+
+    container.innerHTML+=`
+    <div class="beam-card open" id="rc-${i}">
+      <div class="beam-header" onclick="document.getElementById('rc-${i}').classList.toggle('open')">
+        <div class="beam-id-block">
+          <span class="beam-id">${el.id}</span>
+          <span class="beam-size">${el.width}×${el.height}mm · L=${el.length}m</span>
+        </div>
+        <span class="beam-chevron">▼</span>
+      </div>
+      <div class="beam-body">
+        <div class="qty-row">${qtyPills}</div>
+        ${tableSection}
+      </div>
+    </div>`;
+  });
+
+  setPhase(3);
+  setStatus('done');
+  // show Save-to-Steel-Calc button only when opened from index.html
+  const scBtn = document.getElementById('sc-save-btn');
+  if(scBtn){
+    scBtn.style.display = (window.opener && !window.opener.closed) || scContext ? '' : 'none';
+    scBtn.disabled = false;
+    scBtn.textContent = '💾 บันทึกเข้า Steel Calc';
+  }
+  document.getElementById('result-section').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── COPY ─────────────────────────────────────────────────
+function copyResult(){
+  let txt='QUANTITY TAKEOFF SUMMARY\n'+'='.repeat(50)+'\n';
+  elementsData.forEach(el=>{
+    const c=calcElement(el);
+    txt+=`\n${el.id} (${el.width}x${el.height}mm, L=${el.length}m)\n`;
+    txt+=`  Concrete : ${c.concrete} m³\n  Steel    : ${c.steel} kg\n  Formwork : ${c.formwork} m²\n`;
+    c.rows.forEach(r=>txt+=`    ${r.pos}: ${r.count}×DB${r.dia}, L=${r.len}m → ${r.kg} kg\n`);
+  });
+  navigator.clipboard.writeText(txt);
+  const btn=document.getElementById('copy-btn');
+  btn.textContent='✓ Copied!';btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent='Copy Summary';btn.classList.remove('copied');},2000);
+}
+
+// ── STEEL CALC INTEGRATION ────────────────────────────────
+let scContext = null; // { projectId, projectName, userId }
+
+(function loadSteelCalcContext(){
+  try{
+    const raw = sessionStorage.getItem('sc_ai_context');
+    if(!raw) return;
+    scContext = JSON.parse(raw);
+    if(scContext?.projectName){
+      const banner = document.getElementById('sc-project-banner');
+      document.getElementById('sc-project-name').textContent = scContext.projectName;
+      banner.style.display = 'block';
+    }
+  }catch(e){ scContext = null; }
+})();
+
+// map QuantiTake element type → Steel Calc member_type
+function scMemberType(t){
+  const map = {beam:'beam', column:'column', slab:'slab', footing:'footing'};
+  return map[(t||'beam').toLowerCase()] || 'beam';
+}
+
+// build the members[] payload from current elementsData (same calc as results)
+function buildSteelCalcMembers(){
+  return elementsData.map(el=>{
+    const c = calcElement(el);
+    // calc rows → rebars[] matching Steel Calc schema
+    const rebars = (c.rows||[]).map(r=>({
+      mark: r.pos || '',
+      diameter: +r.dia || 0,
+      // slab/beam row length is in meters → store mm
+      length_mm: Math.round((+r.len || 0) * 1000),
+      quantity: +r.count || 0,
+      weight_kg: +(+r.kg || 0).toFixed(2),
+      note: r.barType ? `${r.barType}${r.dia}` : ''
+    })).filter(rb=>rb.quantity>0 && rb.length_mm>0);
+
+    const dims = el.type==='slab'
+      ? `${el.width_m||(el.width/1000)}×${el.length_slab||0}m t=${el.thickness||120}mm`
+      : `${el.width||0}×${el.height||0}mm L=${el.length||0}m`;
+
+    return {
+      member_type: scMemberType(el.type),
+      name: el.id || 'M',
+      floor: null,
+      rebars,
+      total_weight_kg: +(+c.steel || 0).toFixed(2),
+      notes: `QuantiTake · ${dims} · คอนกรีต ${c.concrete} m³ · แบบหล่อ ${c.formwork} m²`,
+      ai_raw: JSON.stringify(el)
+    };
+  }).filter(m=>m.rebars.length>0 || m.total_weight_kg>0);
+}
+
+function saveToSteelCalc(){
+  if(!elementsData.length){ alert('ยังไม่มีข้อมูลให้บันทึก'); return; }
+  const members = buildSteelCalcMembers();
+  if(!members.length){ alert('ไม่มีรายการเหล็กที่จะบันทึก — ลองเปิด Rebar/Steel ในตัวเลือกคำนวณ'); return; }
+
+  const payload = {
+    type: 'SC_AI_SAVE',
+    source: 'quantitake',
+    projectId: scContext?.projectId || null,
+    members
+  };
+
+  const btn = document.getElementById('sc-save-btn');
+
+  // Path 1: opened as popup from index.html → postMessage to opener
+  if(window.opener && !window.opener.closed){
+    window.opener.postMessage(payload, '*');
+    btn.textContent = '✓ ส่งข้อมูลกลับ Steel Calc แล้ว';
+    btn.disabled = true;
+    setStatus('done');
+    setTimeout(()=>{ try{ window.close(); }catch(e){} }, 1200);
+    return;
+  }
+
+  // Path 2 (fallback): no opener → copy JSON so user can paste manually
+  navigator.clipboard?.writeText(JSON.stringify(members,null,2));
+  btn.textContent = '📋 คัดลอก JSON แล้ว (เปิดผ่าน Steel Calc เพื่อบันทึกอัตโนมัติ)';
+  setTimeout(()=>{ btn.textContent='💾 บันทึกเข้า Steel Calc'; }, 2600);
+}
+
+// init
+setPhase(1);
+</script>
+</body>
+</html>

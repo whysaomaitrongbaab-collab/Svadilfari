@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ออกแบบคาน | Beam Design</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #f0883e;
+    --accent2: #58a6ff;
+    --accent3: #3fb950;
+    --accent-red: #f85149;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-dim: #484f58;
+    --pass: #3fb950;
+    --fail: #f85149;
+    --warn: #d29922;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* Header */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+
+  .logo svg { width: 28px; height: 28px; }
+
+  header h1 {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    border-left: 1px solid var(--border);
+    padding-left: 1rem;
+    margin-left: 0.5rem;
+  }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    min-height: calc(100vh - 56px);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.75rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .form-group label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .form-group label span {
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    margin-left: 0.3rem;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex;
+  }
+
+  .input-wrap input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.5rem 0.75rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .input-wrap input:focus {
+    border-color: var(--accent2);
+  }
+
+  .input-wrap .unit {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    pointer-events: none;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  /* Support Radio */
+  .support-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .support-option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-size: 0.82rem;
+  }
+
+  .support-option:hover {
+    border-color: var(--accent2);
+  }
+
+  .support-option input[type="radio"] {
+    accent-color: var(--accent2);
+  }
+
+  .support-option.selected {
+    border-color: var(--accent2);
+    background: rgba(88,166,255,0.06);
+  }
+
+  .support-label {
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+
+  .support-icon {
+    margin-left: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+
+  /* Button */
+  .btn-calc {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--accent);
+    color: #0d1117;
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-calc:hover { opacity: 0.88; }
+  .btn-calc:active { transform: scale(0.99); }
+
+  .btn-reset {
+    width: 100%;
+    padding: 0.6rem;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    font-size: 0.82rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .btn-reset:hover { border-color: var(--text-muted); color: var(--text); }
+
+  /* Main content */
+  .main {
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow-y: auto;
+  }
+
+  /* Beam Canvas */
+  .beam-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-header h2 {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .badge-pass { background: rgba(63,185,80,0.15); color: var(--pass); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-fail { background: rgba(248,81,73,0.15); color: var(--fail); border: 1px solid rgba(248,81,73,0.3); }
+  .badge-idle { background: rgba(139,148,158,0.15); color: var(--text-muted); border: 1px solid var(--border); }
+
+  canvas {
+    display: block;
+    width: 100%;
+  }
+
+  /* Results grid */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .result-card .label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .result-card .value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent2);
+  }
+
+  .result-card .sub {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Summary table */
+  .summary-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+  }
+
+  thead tr {
+    background: var(--surface2);
+  }
+
+  th {
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  td.label-col {
+    font-family: 'IBM Plex Sans Thai', sans-serif;
+    font-size: 0.82rem;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .check-pass { color: var(--pass); font-size: 1rem; }
+  .check-fail { color: var(--fail); font-size: 1rem; }
+  .check-na { color: var(--text-dim); }
+
+  /* Placeholder state */
+  .placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    gap: 1rem;
+    color: var(--text-dim);
+  }
+
+  .placeholder svg { opacity: 0.3; }
+  .placeholder p { font-size: 0.85rem; }
+
+  /* Section block */
+  .section-block { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* Moment diagram area */
+  #diagram-canvas { background: var(--bg); }
+
+  /* Cross-section canvas */
+  #section-canvas { background: var(--bg); }
+
+  .canvases {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    gap: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .canvas-label {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 0.4rem;
+    background: var(--surface2);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .canvas-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .canvas-col:first-child { border-right: 1px solid var(--border); }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .results-grid { grid-template-columns: repeat(2, 1fr); }
+    .canvases { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="11" width="24" height="6" rx="1" fill="currentColor" opacity="0.9"/>
+      <rect x="4" y="17" width="4" height="8" rx="1" fill="currentColor" opacity="0.6"/>
+      <rect x="20" y="17" width="4" height="8" rx="1" fill="currentColor" opacity="0.6"/>
+      <rect x="4" y="3" width="20" height="8" rx="1" fill="currentColor" opacity="0.3"/>
+    </svg>
+    BEAM DESIGN
+  </div>
+  <h1>ออกแบบคานคอนกรีตเสริมเหล็ก</h1>
+</header>
+
+<div class="layout">
+  <!-- Sidebar Inputs -->
+  <aside class="sidebar">
+
+    <!-- Geometry -->
+    <div class="section-block">
+      <div class="section-title">รูปทรง (Geometry)</div>
+      <div class="form-group">
+        <label>ความยาวคาน L <span>(ช่วงเดียว)</span></label>
+        <div class="input-wrap">
+          <input type="number" id="L" value="6" step="0.1" min="0.5">
+          <span class="unit">m</span>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>กว้าง b</label>
+          <div class="input-wrap">
+            <input type="number" id="b" value="300" step="10" min="100">
+            <span class="unit">mm</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>สูง h</label>
+          <div class="input-wrap">
+            <input type="number" id="h" value="500" step="10" min="150">
+            <span class="unit">mm</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>cover <span>(ระยะหุ้ม)</span></label>
+        <div class="input-wrap">
+          <input type="number" id="cover" value="40" step="5" min="20">
+          <span class="unit">mm</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Support Condition -->
+    <div class="section-block">
+      <div class="section-title">เงื่อนไขรองรับ (Support)</div>
+      <div class="support-options">
+        <label class="support-option selected" id="lbl-pinpin">
+          <input type="radio" name="support" value="pinpin" checked>
+          <span class="support-label">Pin – Pin</span>
+          <span class="support-icon">⊖──⊖</span>
+        </label>
+        <label class="support-option" id="lbl-fixpin">
+          <input type="radio" name="support" value="fixpin">
+          <span class="support-label">Fixed – Pin</span>
+          <span class="support-icon">▌──⊖</span>
+        </label>
+        <label class="support-option" id="lbl-fixfix">
+          <input type="radio" name="support" value="fixfix">
+          <span class="support-label">Fixed – Fixed</span>
+          <span class="support-icon">▌──▐</span>
+        </label>
+        <label class="support-option" id="lbl-cantilever">
+          <input type="radio" name="support" value="cantilever">
+          <span class="support-label">Cantilever</span>
+          <span class="support-icon">▌──○</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Material -->
+    <div class="section-block">
+      <div class="section-title">วัสดุ (Material)</div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>fc′</label>
+          <div class="input-wrap">
+            <input type="number" id="fc" value="28" step="1" min="17">
+            <span class="unit">MPa</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>fy</label>
+          <div class="input-wrap">
+            <input type="number" id="fy" value="390" step="10" min="235">
+            <span class="unit">MPa</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Ec <span>(คอนกรีต)</span></label>
+        <div class="input-wrap">
+          <input type="number" id="Ec" placeholder="คำนวณอัตโนมัติ" step="100">
+          <span class="unit">MPa</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="section-block">
+      <div class="section-title">น้ำหนักบรรทุก (Loading)</div>
+      <div class="form-group">
+        <label>Dead Load (DL) <span>รวมน้ำหนักคานแล้ว</span></label>
+        <div class="input-wrap">
+          <input type="number" id="DL" value="20" step="1" min="0">
+          <span class="unit">kN/m</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Live Load (LL)</label>
+        <div class="input-wrap">
+          <input type="number" id="LL" value="15" step="1" min="0">
+          <span class="unit">kN/m</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Load Combination</label>
+        <div class="input-wrap" style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:0.5rem 0.75rem;">
+          <span style="font-size:0.82rem;font-family:'IBM Plex Mono',monospace;color:var(--accent2)">Wu = 1.2DL + 1.6LL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stirrup -->
+    <div class="section-block">
+      <div class="section-title">เหล็กปลอก (Stirrup)</div>
+      <div class="form-group">
+        <label>ขนาดเหล็กปลอก <span>(เลือกได้ 2 ขนาด)</span></label>
+        <div style="display:flex;gap:0.5rem;">
+          <label style="flex:1;display:flex;align-items:center;gap:0.4rem;padding:0.45rem 0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.82rem;" id="lbl-rb9">
+            <input type="checkbox" id="chk-rb9" value="RB9" checked style="accent-color:var(--accent2)"> RB9
+          </label>
+          <label style="flex:1;display:flex;align-items:center;gap:0.4rem;padding:0.45rem 0.6rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:0.82rem;" id="lbl-db12">
+            <input type="checkbox" id="chk-db12" value="DB12" checked style="accent-color:var(--accent2)"> DB12
+          </label>
+        </div>
+        <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.2rem;">RB9: Av=127.2 mm² &nbsp;|&nbsp; DB12: Av=226.2 mm²</div>
+      </div>
+      <div class="form-group">
+        <label>fyt <span>(กำลังคราก เหล็กปลอก)</span></label>
+        <div class="input-wrap">
+          <input type="number" id="fyt" value="235" step="10" min="235">
+          <span class="unit">MPa</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEEL CALC LINK (shown only when opened from index.html) -->
+    <div class="section-block" id="sc-link-block" style="display:none;border:1px solid var(--accent2);border-radius:8px;background:rgba(88,166,255,0.06)">
+      <div class="section-title" style="color:var(--accent2)">🔗 เชื่อมกับ Steel Calc</div>
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem">โครงการ: <b id="sc-project-name" style="color:var(--accent2)">—</b></div>
+      <div class="form-group">
+        <label>ชื่อ/รหัสคาน <span>(สำหรับบันทึก)</span></label>
+        <div class="input-wrap">
+          <input type="text" id="sc-member-name" value="B1" placeholder="เช่น B-GL1">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>ชั้น / ตำแหน่ง <span>(ไม่บังคับ)</span></label>
+        <div class="input-wrap">
+          <input type="text" id="sc-member-floor" placeholder="เช่น 2F">
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.25rem;">
+      <button class="btn-calc" onclick="calculate()">⚡ คำนวณออกแบบ</button>
+      <button class="btn-calc" id="sc-save-btn" onclick="saveToSteelCalc()" style="display:none;background:var(--accent3)">💾 บันทึกเข้า Steel Calc</button>
+      <button class="btn-reset" onclick="resetAll()">↺ ล้างค่า</button>
+    </div>
+
+  </aside>
+
+  <!-- Main Results -->
+  <main class="main">
+
+    <!-- Beam Diagram -->
+    <div class="beam-card">
+      <div class="card-header">
+        <h2>แผนภาพคาน (Beam Diagram)</h2>
+        <span class="badge badge-idle" id="design-badge">รอคำนวณ</span>
+      </div>
+      <div class="canvases">
+        <div class="canvas-col">
+          <div class="canvas-label">แรงเฉือน + โมเมนต์ (SFD / BMD)</div>
+          <canvas id="diagram-canvas" height="220"></canvas>
+        </div>
+        <div class="canvas-col">
+          <div class="canvas-label">หน้าตัด (Cross-Section)</div>
+          <canvas id="section-canvas" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Results -->
+    <div class="results-grid" id="results-grid">
+      <div class="result-card">
+        <span class="label">Wu (น้ำหนักบรรทุกรวม)</span>
+        <span class="value" id="r-wu">—</span>
+        <span class="sub">kN/m</span>
+      </div>
+      <div class="result-card">
+        <span class="label">Mu (โมเมนต์สูงสุด)</span>
+        <span class="value" id="r-mu">—</span>
+        <span class="sub">kN·m</span>
+      </div>
+      <div class="result-card">
+        <span class="label">Vu (แรงเฉือนสูงสุด)</span>
+        <span class="value" id="r-vu">—</span>
+        <span class="sub">kN</span>
+      </div>
+      <div class="result-card">
+        <span class="label">As,req (เหล็กล่างต้องการ)</span>
+        <span class="value" id="r-as-req">—</span>
+        <span class="sub">cm²</span>
+      </div>
+      <div class="result-card">
+        <span class="label">ρ (อัตราส่วนเหล็ก)</span>
+        <span class="value" id="r-rho">—</span>
+        <span class="sub">ρmin / ρmax</span>
+      </div>
+      <div class="result-card">
+        <span class="label">φMn (กำลังที่ได้)</span>
+        <span class="value" id="r-phiMn">—</span>
+        <span class="sub">kN·m</span>
+      </div>
+    </div>
+
+    <!-- Summary Table -->
+    <div class="summary-table">
+      <div class="card-header">
+        <h2>สรุปผลการออกแบบ (Design Summary)</h2>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>รายการ</th>
+            <th>ค่าที่ต้องการ</th>
+            <th>ค่าที่ได้</th>
+            <th>ผล</th>
+          </tr>
+        </thead>
+        <tbody id="summary-tbody">
+          <tr>
+            <td colspan="4">
+              <div class="placeholder">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <rect x="5" y="16" width="30" height="8" rx="2" fill="currentColor"/>
+                  <rect x="7" y="24" width="5" height="10" rx="1" fill="currentColor"/>
+                  <rect x="28" y="24" width="5" height="10" rx="1" fill="currentColor"/>
+                </svg>
+                <p>กรอกข้อมูลและกด คำนวณออกแบบ</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── STEEL CALC INTEGRATION ────────────────────────────────
+let scContext = null;       // { projectId, projectName, userId }
+let lastBeamResult = null;  // populated by calculate()
+
+(function loadSteelCalcContext(){
+  try{
+    const raw = sessionStorage.getItem('sc_ai_context');
+    if(!raw) return;
+    scContext = JSON.parse(raw);
+    if(scContext?.projectName){
+      document.getElementById('sc-link-block').style.display = 'block';
+      document.getElementById('sc-project-name').textContent = scContext.projectName;
+    }
+  }catch(e){ scContext = null; }
+})();
+
+// rebar unit weight kg/m (รวม RB ด้วย)
+const SC_UW = {6:.222,9:.499,10:.617,12:.888,16:1.578,19:2.226,20:2.466,22:2.984,25:3.853,28:4.834,32:6.313};
+const scUW = d => SC_UW[+d] || (0.006165*d*d);
+
+// build a Steel Calc member (type 'beam') from the last design result
+function buildBeamMember(){
+  const r = lastBeamResult;
+  if(!r) return null;
+  const name  = (document.getElementById('sc-member-name').value || 'B1').trim();
+  const floor = (document.getElementById('sc-member-floor').value || '').trim() || null;
+
+  const hook = 0.3;                 // ระยะงอปลายต่อด้าน (m) — สอดคล้องกับ QuantiTake
+  const Lbar_mm = Math.round((r.L + 2*hook) * 1000);
+  const rebars = [];
+
+  // เหล็กล่าง (bottom / positive)
+  if(r.barBot){
+    const dia = r.barBot.bar.d, qty = r.barBot.n;
+    rebars.push({
+      mark:'Bottom', diameter:dia, length_mm:Lbar_mm, quantity:qty,
+      weight_kg:+(qty*(r.L+2*hook)*scUW(dia)).toFixed(2),
+      note:`As=${(r.barBot.As_prov/100).toFixed(2)}cm²`
+    });
+  }
+  // เหล็กบน (top / negative)
+  if(r.barTop){
+    const dia = r.barTop.bar.d, qty = r.barTop.n;
+    rebars.push({
+      mark:'Top', diameter:dia, length_mm:Lbar_mm, quantity:qty,
+      weight_kg:+(qty*(r.L+2*hook)*scUW(dia)).toFixed(2),
+      note:`As'=${(r.barTop.As_prov/100).toFixed(2)}cm²`
+    });
+  }
+  // เหล็กปลอก (stirrups) — ใช้ค่าจากตัวแรกที่เลือก
+  const stir = (r.stirData||[])[0];
+  if(stir && stir.s_use){
+    const dia = (stir.stirrup.match(/\d+/)||[9])[0]*1;
+    const qty = Math.ceil((r.L*1000)/stir.s_use)+1;
+    const cover = r.cover/1000;
+    const perim = 2*((r.b/1000-2*cover)+(r.h/1000-2*cover)) + 8*(dia/1000);
+    rebars.push({
+      mark:'Stirrup', diameter:dia, length_mm:Math.round(perim*1000), quantity:qty,
+      weight_kg:+(qty*perim*scUW(dia)).toFixed(2),
+      note:`${stir.stirrup}@${stir.s_use}mm`
+    });
+  }
+
+  const total = +rebars.reduce((s,x)=>s+(x.weight_kg||0),0).toFixed(2);
+  const supportTxt = {pinpin:'Pin-Pin',fixpin:'Fixed-Pin',fixfix:'Fixed-Fixed',cantilever:'Cantilever'}[r.support]||r.support;
+
+  return {
+    member_type:'beam',
+    name, floor, rebars,
+    total_weight_kg: total,
+    notes:`Beam Design · ${r.b}×${r.h}mm L=${r.L}m · ${supportTxt} · Mu=${r.Mu_max.toFixed(1)}kN·m · ${r.all_pass?'ออกแบบผ่าน ✓':'ไม่ผ่าน ✗'}`,
+    ai_raw: JSON.stringify({L:r.L,b:r.b,h:r.h,fc:r.fc,fy:r.fy,support:r.support,Mu:r.Mu_max,Vu:r.Vu_max})
+  };
+}
+
+function saveToSteelCalc(){
+  if(!lastBeamResult){ alert('กรุณากดคำนวณออกแบบก่อน'); return; }
+  const member = buildBeamMember();
+  if(!member || !member.rebars.length){ alert('ไม่มีรายการเหล็กที่จะบันทึก'); return; }
+
+  const payload = {
+    type:'SC_AI_SAVE',
+    source:'beam',
+    projectId: scContext?.projectId || null,
+    members:[member]
+  };
+
+  const btn = document.getElementById('sc-save-btn');
+  if(window.opener && !window.opener.closed){
+    window.opener.postMessage(payload, '*');
+    btn.textContent = '✓ ส่งข้อมูลกลับ Steel Calc แล้ว';
+    btn.disabled = true;
+    setTimeout(()=>{ try{ window.close(); }catch(e){} }, 1200);
+    return;
+  }
+  // fallback: copy JSON
+  navigator.clipboard?.writeText(JSON.stringify([member],null,2));
+  btn.textContent = '📋 คัดลอก JSON แล้ว';
+  setTimeout(()=>{ btn.textContent='💾 บันทึกเข้า Steel Calc'; }, 2600);
+}
+
+// Support radio highlight
+document.querySelectorAll('.support-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.support-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+  });
+});
+
+function getSupport() {
+  return document.querySelector('input[name="support"]:checked').value;
+}
+
+// ─── Bar & Stirrup Data ────────────────────────────────────────────────
+// sorted small→large (เลือกขนาดเล็กก่อน)
+const ALL_BARS = [
+  { label:'DB10', d:10, A:78.5  },
+  { label:'DB12', d:12, A:113.1 },
+  { label:'DB16', d:16, A:201.1 },
+  { label:'DB20', d:20, A:314.2 },
+  { label:'DB22', d:22, A:380.1 },
+  { label:'DB25', d:25, A:490.9 },
+  { label:'DB28', d:28, A:615.8 },
+  { label:'DB32', d:32, A:804.2 },
+];
+const STIRRUP_OPTIONS = {
+  'RB9' : { label:'RB9',  d:9,  Av:2*63.6  },   // Av = 2 legs × 63.6
+  'DB12': { label:'DB12', d:12, Av:2*113.1 },   // Av = 2 legs × 113.1
+};
+
+/**
+ * เลือกจำนวน+ขนาดเหล็กที่ให้ As_prov ≥ As_req ใกล้ที่สุด
+ * เลือกขนาดเล็กก่อน (iterate small→large)
+ * คืน { n, bar, As_prov }
+ */
+function selectBars(As_req_mm2, b_mm, cover_mm, stirD_mm) {
+  const MIN_CLEAR = 25;
+  const innerW = b_mm - 2*cover_mm - 2*stirD_mm;
+  let best = null;
+  let bestDiff = Infinity;
+
+  // ALL_BARS เรียงเล็ก→ใหญ่: วนทุก bar+n หา diff น้อยสุด
+  // ถ้า diff เท่ากันพอดี → เก็บ bar เล็กกว่า (loop เล็กก่อน ไม่เขียนทับเพราะใช้ <)
+  for (const bar of ALL_BARS) {
+    const maxN = Math.floor((innerW + MIN_CLEAR) / (bar.d + MIN_CLEAR));
+    if (maxN < 2) continue;
+    for (let n = 2; n <= maxN; n++) {
+      const As_prov = n * bar.A;
+      if (As_prov >= As_req_mm2) {
+        const diff = As_prov - As_req_mm2;
+        if (diff < bestDiff) { bestDiff = diff; best = { n, bar, As_prov }; }
+        break;
+      }
+    }
+  }
+  return best;
+}
+
+/**
+ * คำนวณระยะเหล็กปลอก s สำหรับแต่ละขนาด (RB9, DB12)
+ * s = Av*fyt*d / Vs_req  (ไม่เกิน s_max)
+ * s_max = min(d/2, 600 mm) ตาม ACI
+ * คืน array ของ { stirrup, s_calc, s_use, Vs_prov, ok }
+ */
+function calcStirrupSpacing(stirrupKeys, fyt, Vs_req_N, d_mm, b_mm) {
+  const s_max = Math.min(d_mm / 2, 600); // ACI s_max
+  return stirrupKeys.map(key => {
+    const st = STIRRUP_OPTIONS[key];
+    let s_calc, s_use, Vs_prov, note = '';
+    if (Vs_req_N <= 0) {
+      s_calc = s_max;
+      // ปัดลงเป็น 50 mm (มาตรฐานก่อสร้าง)
+      s_use = Math.floor(s_max / 50) * 50;
+      if (s_use < 50) s_use = 50;
+      Vs_prov = (st.Av * fyt * d_mm / s_use) / 1000;
+      note = 'ใช้ s_max';
+    } else {
+      s_calc = (st.Av * fyt * d_mm) / Vs_req_N; // mm
+      const s_limit = Math.min(s_calc, s_max);
+      // ปัดลงเป็น 50 mm
+      s_use = Math.floor(s_limit / 50) * 50;
+      if (s_use < 50) s_use = 50;
+      Vs_prov = (st.Av * fyt * d_mm / s_use) / 1000;
+    }
+    const pass = Vs_prov > 0 && s_use <= s_max;
+    return { stirrup: st.label, Av: st.Av, s_calc, s_use, Vs_prov, s_max, note, pass };
+  });
+}
+
+function calculate() {
+  // --- inputs ---
+  const L     = parseFloat(document.getElementById('L').value)     || 6;
+  const b     = parseFloat(document.getElementById('b').value)     || 300;
+  const h     = parseFloat(document.getElementById('h').value)     || 500;
+  const cover = parseFloat(document.getElementById('cover').value) || 40;
+  const fc    = parseFloat(document.getElementById('fc').value)    || 28;
+  const fy    = parseFloat(document.getElementById('fy').value)    || 390;
+  const fyt   = parseFloat(document.getElementById('fyt').value)   || 235;
+  const DL    = parseFloat(document.getElementById('DL').value)    || 20;
+  const LL    = parseFloat(document.getElementById('LL').value)    || 15;
+  const support = getSupport();
+
+  // เหล็กปลอกที่เลือก
+  const stirrupKeys = [];
+  if (document.getElementById('chk-rb9').checked)  stirrupKeys.push('RB9');
+  if (document.getElementById('chk-db12').checked) stirrupKeys.push('DB12');
+  if (stirrupKeys.length === 0) { alert('กรุณาเลือกขนาดเหล็กปลอกอย่างน้อย 1 ขนาด'); return; }
+
+  // Auto Ec
+  const Ec = parseFloat(document.getElementById('Ec').value) || Math.round(4700 * Math.sqrt(fc));
+
+  // --- load combo ---
+  const Wu = 1.2 * DL + 1.6 * LL;
+
+  // --- moment & shear ---
+  let Mu_max, Vu_max, Mu_neg = 0;
+  switch(support) {
+    case 'pinpin':    Mu_max = Wu*L*L/8;           Vu_max = Wu*L/2;       break;
+    case 'fixpin':    Mu_max = 9*Wu*L*L/128; Mu_neg = Wu*L*L/8; Vu_max = (5/8)*Wu*L; break;
+    case 'fixfix':    Mu_max = Wu*L*L/24;   Mu_neg = Wu*L*L/12; Vu_max = Wu*L/2;     break;
+    case 'cantilever':Mu_max = Wu*L*L/2;           Vu_max = Wu*L;         break;
+  }
+
+  // --- section ---
+  // stirrup diameter for effective depth (ใช้ stirrup ตัวใหญ่สุดที่เลือก)
+  const stirD_eff = stirrupKeys.includes('DB12') ? 12 : 9;
+  const d_mm  = h - cover - stirD_eff - 10; // cover + stirrup + bar_r ≈10
+  const b_mm  = b;
+
+  // ACI beta1
+  const beta1 = fc <= 28 ? 0.85 : Math.max(0.65, 0.85 - 0.05*(fc-28)/7);
+
+  // rho min/max
+  const rho_min = Math.max(0.25*Math.sqrt(fc)/fy, 1.4/fy);
+  const rho_max = 0.75*(0.85*beta1*fc/fy)*(600/(600+fy));
+
+  // As req (positive / เหล็กล่าง)
+  const phi = 0.9;
+  const Mu_Nmm = Mu_max * 1e6;
+  const Rn     = Mu_Nmm / (phi * b_mm * d_mm * d_mm);
+  const rho_req  = (0.85*fc/fy) * (1 - Math.sqrt(1 - 2*Rn/(0.85*fc)));
+  const rho_use  = Math.max(rho_req, rho_min);
+  const As_req_mm2   = rho_use * b_mm * d_mm;
+  const As_req_cm2   = As_req_mm2 / 100;
+
+  // phi*Mn provided
+  const a_prov   = As_req_mm2 * fy / (0.85*fc*b_mm);
+  const phiMn_prov = phi * As_req_mm2 * fy * (d_mm - a_prov/2) / 1e6;
+
+  // As' req (negative / เหล็กบน) – ใช้ rho_min ถ้าไม่มี Mu_neg
+  let As_neg_req_mm2 = 0, As_neg_req_cm2 = 0;
+  if (Mu_neg > 0) {
+    const Rn_neg   = Mu_neg*1e6 / (phi*b_mm*d_mm*d_mm);
+    const rho_neg  = (0.85*fc/fy)*(1-Math.sqrt(1-2*Rn_neg/(0.85*fc)));
+    const rho_neg_use = Math.max(rho_neg, rho_min);
+    As_neg_req_mm2 = rho_neg_use * b_mm * d_mm;
+    As_neg_req_cm2 = As_neg_req_mm2 / 100;
+  } else {
+    // ต้องมีเหล็กบนอย่างน้อย rho_min (ACI ข้อบังคับ 2 เส้น)
+    As_neg_req_mm2 = rho_min * b_mm * d_mm;
+    As_neg_req_cm2 = As_neg_req_mm2 / 100;
+  }
+
+  // เลือกเหล็กล่าง (As)
+  const barBot = selectBars(As_req_mm2,   b_mm, cover, stirD_eff);
+  // เลือกเหล็กบน (As')
+  const barTop = selectBars(As_neg_req_mm2, b_mm, cover, stirD_eff);
+
+  // Shear
+  const phi_v  = 0.75;
+  const Vc     = (1/6)*Math.sqrt(fc)*b_mm*d_mm/1000; // kN
+  const Vs_req = Math.max(0, Vu_max/phi_v - Vc);
+  const Vs_req_N = Vs_req * 1000; // N
+
+  // ระยะเหล็กปลอก
+  const stirData = calcStirrupSpacing(stirrupKeys, fyt, Vs_req_N, d_mm, b_mm);
+
+  // Deflection
+  const Ig = b_mm * Math.pow(h,3) / 12;
+  const w_service = (DL+LL)/1000;
+  let delta_mid;
+  switch(support) {
+    case 'pinpin':    delta_mid = 5*w_service*Math.pow(L*1000,4)/(384*Ec*Ig); break;
+    case 'fixpin':    delta_mid = w_service*Math.pow(L*1000,4)/(185*Ec*Ig);   break;
+    case 'fixfix':    delta_mid = w_service*Math.pow(L*1000,4)/(384*Ec*Ig);   break;
+    case 'cantilever':delta_mid = w_service*Math.pow(L*1000,4)/(8*Ec*Ig);     break;
+  }
+  const delta_allow = (L*1000)/360;
+
+  // ---- update top result cards ----
+  document.getElementById('r-wu').textContent    = Wu.toFixed(2);
+  document.getElementById('r-mu').textContent    = Mu_max.toFixed(1);
+  document.getElementById('r-vu').textContent    = Vu_max.toFixed(1);
+  document.getElementById('r-as-req').textContent = As_req_cm2.toFixed(2);
+  document.getElementById('r-rho').textContent   = (rho_use*100).toFixed(3)+'%';
+  document.getElementById('r-phiMn').textContent = phiMn_prov.toFixed(1);
+
+  const pass_moment = phiMn_prov >= Mu_max;
+  const pass_shear  = phi_v*(Vc+Vs_req) >= Vu_max || phi_v*Vc >= Vu_max;
+  const pass_rho    = rho_use <= rho_max;
+  const pass_defl   = delta_mid <= delta_allow;
+  const all_pass    = pass_moment && pass_shear && pass_rho && pass_defl;
+
+  const badge = document.getElementById('design-badge');
+  badge.textContent = all_pass ? '✓ ออกแบบผ่าน' : '✗ ออกแบบไม่ผ่าน';
+  badge.className   = 'badge ' + (all_pass ? 'badge-pass' : 'badge-fail');
+
+  // ---- stirrup rows ----
+  const stirRowsHTML = stirData.map(sd => {
+    const phiVn = phi_v * (Vc + sd.Vs_prov);
+    const shearOk = phiVn >= Vu_max;
+    return `
+    <tr style="background:rgba(240,136,62,0.05)">
+      <td class="label-col" style="color:var(--accent)">🔗 ปลอก ${sd.stirrup} — ระยะ s</td>
+      <td>Vs,req = ${Vs_req.toFixed(2)} kN<br><span style="color:var(--text-dim);font-size:0.72rem">Av = ${sd.Av.toFixed(1)} mm²</span></td>
+      <td>
+        <span style="font-size:0.78rem;color:var(--text-dim)">s,calc = ${sd.s_calc.toFixed(0)} mm → </span>
+        <b style="color:var(--accent);font-size:0.9rem">s = ${sd.s_use} mm</b>${sd.note?' <span style="color:var(--text-dim);font-size:0.7rem">('+sd.note+')</span>':''}
+        <br><span style="color:var(--text-dim);font-size:0.72rem">s_max = ${sd.s_max.toFixed(0)} mm</span>
+      </td>
+      <td class="${sd.pass?'check-pass':'check-fail'}">${sd.pass?'✓':'✗'}</td>
+    </tr>
+    <tr style="background:rgba(240,136,62,0.02)">
+      <td class="label-col" style="padding-left:1.5rem;color:var(--text-dim);font-size:0.78rem">└ กำลังเฉือนที่ได้</td>
+      <td style="color:var(--text-dim);font-size:0.78rem">φVc = ${(phi_v*Vc).toFixed(2)} kN</td>
+      <td style="color:${shearOk?'var(--accent3)':'var(--fail)'};font-size:0.82rem">
+        φVn = φ(Vc+Vs) = ${phiVn.toFixed(2)} kN  ${shearOk?'≥':'<'}  Vu = ${Vu_max.toFixed(2)} kN
+      </td>
+      <td class="${shearOk?'check-pass':'check-fail'}">${shearOk?'✓':'✗'}</td>
+    </tr>`; 
+  }).join('');
+
+  // ---- bar selection rows ----
+  const botLabel = barBot ? `${barBot.n}-${barBot.bar.label}  (As=${barBot.As_prov.toFixed(0)} mm² = ${(barBot.As_prov/100).toFixed(2)} cm²)` : '— ไม่พบ (ขยาย b หรือ h)';
+  const topLabel = barTop ? `${barTop.n}-${barTop.bar.label}  (As'=${barTop.As_prov.toFixed(0)} mm² = ${(barTop.As_prov/100).toFixed(2)} cm²)` : '— ไม่พบ';
+
+  // ---- Summary table ----
+  const rows = [
+    ['Mu (โมเมนต์ต้องการ)',  Mu_max.toFixed(2)+' kN·m',       phiMn_prov.toFixed(2)+' kN·m',          pass_moment],
+    ['Vu (แรงเฉือนต้องการ)', Vu_max.toFixed(2)+' kN',         (phi_v*Vc).toFixed(2)+' kN (φVc)',        phi_v*Vc>=Vu_max],
+    ['As,req (เหล็กล่าง)',   As_req_cm2.toFixed(2)+' cm²',    botLabel,                                 !!barBot],
+    ['As′,req (เหล็กบน)',    As_neg_req_cm2.toFixed(2)+' cm²',topLabel,                                 !!barTop],
+    ['ρ ≤ ρmax',             (rho_use*100).toFixed(3)+'%',    (rho_max*100).toFixed(3)+'%',             pass_rho],
+    ['ρ ≥ ρmin',             (rho_min*100).toFixed(3)+'%',    (rho_use*100).toFixed(3)+'%',             rho_use>=rho_min],
+    ['Deflection δ',          delta_mid.toFixed(2)+' mm',      delta_allow.toFixed(1)+' mm (L/360)',     pass_defl],
+    ['Ec (คอนกรีต)',          Ec+' MPa',                       '4700√fc\'',                              true],
+    ['β₁ (beta1)',            '—',                              beta1.toFixed(3),                         true],
+    ['d (effective depth)',   '—',                              d_mm+' mm',                               true],
+  ];
+
+  const tbody = document.getElementById('summary-tbody');
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="label-col">${r[0]}</td>
+      <td>${r[1]}</td>
+      <td>${r[2]}</td>
+      <td class="${r[3]?'check-pass':'check-fail'}">${r[3]?'✓':'✗'}</td>
+    </tr>
+  `).join('') + stirRowsHTML;
+
+  // Draw diagrams
+  drawDiagram(L, Wu, Mu_max, Vu_max, support, Mu_neg);
+  drawSection(b_mm, h, cover, d_mm, barBot ? barBot.As_prov : As_req_mm2, barBot, barTop, stirD_eff);
+
+  // ── capture result for Steel Calc save-back ──
+  lastBeamResult = {
+    L, b, h, cover, fc, fy, fyt, DL, LL, support, Wu,
+    Mu_max, Vu_max, As_req_cm2,
+    barBot, barTop, stirData, stirrupKeys,
+    all_pass, d_mm
+  };
+  // reveal Save button if opened from Steel Calc
+  const scBtn = document.getElementById('sc-save-btn');
+  if(scBtn){
+    scBtn.style.display = (window.opener && !window.opener.closed) || scContext ? 'inline-flex' : 'none';
+    scBtn.disabled = false;
+  }
+}
+
+function drawDiagram(L, Wu, Mu_max, Vu_max, support, Mu_neg) {
+  const canvas = document.getElementById('diagram-canvas');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 600;
+  canvas.height = 220 * window.devicePixelRatio || 440;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  ctx.scale(dpr, dpr);
+  const W = canvas.width / dpr;
+  const H = canvas.height / dpr;
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { l: 50, r: 30, t: 20, b: 10 };
+  const midY = H / 2;
+  const beamY = 80;
+  const beamH = 20;
+  const n = 60;
+
+  // Beam line
+  ctx.strokeStyle = '#8b949e';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.rect(pad.l, beamY, W - pad.l - pad.r, beamH);
+  ctx.stroke();
+
+  // Draw supports
+  drawSupports(ctx, support, pad.l, W - pad.r, beamY + beamH);
+
+  // Distributed load arrows
+  const arrowX0 = pad.l, arrowX1 = W - pad.r;
+  ctx.strokeStyle = '#58a6ff';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) {
+    const x = arrowX0 + (arrowX1 - arrowX0) * i / 10;
+    ctx.beginPath();
+    ctx.moveTo(x, beamY - 22);
+    ctx.lineTo(x, beamY - 4);
+    ctx.stroke();
+    // arrowhead
+    ctx.beginPath();
+    ctx.moveTo(x, beamY - 3);
+    ctx.lineTo(x - 3, beamY - 10);
+    ctx.lineTo(x + 3, beamY - 10);
+    ctx.closePath();
+    ctx.fillStyle = '#58a6ff';
+    ctx.fill();
+  }
+  ctx.strokeStyle = '#58a6ff';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(arrowX0, beamY - 22);
+  ctx.lineTo(arrowX1, beamY - 22);
+  ctx.stroke();
+  ctx.fillStyle = '#58a6ff';
+  ctx.font = '10px IBM Plex Mono, monospace';
+  ctx.fillText('Wu = ' + Wu.toFixed(1) + ' kN/m', arrowX0 + 6, beamY - 26);
+
+  // SFD (bottom half)
+  const sfdY0 = H - 15;
+  const sfdScale = 45 / Vu_max;
+  ctx.strokeStyle = '#f0883e';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  const pts_sfd = getSFD(support, n, Vu_max);
+  for (let i = 0; i <= n; i++) {
+    const x = pad.l + (W - pad.l - pad.r) * i / n;
+    const y = sfdY0 - pts_sfd[i] * sfdScale;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, sfdY0); ctx.lineTo(W - pad.r, sfdY0);
+  ctx.stroke();
+  ctx.fillStyle = '#f0883e';
+  ctx.font = '9px IBM Plex Mono, monospace';
+  ctx.fillText('SFD', pad.l - 35, sfdY0 - 15);
+  ctx.fillText(Vu_max.toFixed(0)+' kN', W - pad.r - 50, sfdY0 - 10);
+
+  // BMD
+  const bmdY0 = beamY + beamH + 10;
+  const bmdMax = Math.max(Mu_max, Mu_neg || 0);
+  const bmdScale = 30 / bmdMax;
+  ctx.strokeStyle = '#3fb950';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  const pts_bmd = getBMD(support, n, Mu_max, Mu_neg);
+  for (let i = 0; i <= n; i++) {
+    const x = pad.l + (W - pad.l - pad.r) * i / n;
+    const y = bmdY0 + pts_bmd[i] * bmdScale;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.fillStyle = '#3fb950';
+  ctx.font = '9px IBM Plex Mono, monospace';
+  ctx.fillText('BMD', pad.l - 35, bmdY0 + 20);
+  ctx.fillText(Mu_max.toFixed(0)+' kN·m', W - pad.r - 70, bmdY0 + 25);
+}
+
+function drawSupports(ctx, support, x0, x1, y) {
+  const size = 14;
+  ctx.strokeStyle = '#8b949e';
+  ctx.lineWidth = 1.5;
+
+  // Left support
+  if (support === 'fixpin' || support === 'fixfix' || support === 'cantilever') {
+    // Fixed (wall)
+    ctx.fillStyle = '#30363d';
+    ctx.fillRect(x0 - 12, y, 10, 30);
+    ctx.strokeStyle = '#8b949e';
+    ctx.strokeRect(x0 - 12, y, 10, 30);
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(x0 - 12, y + i*8);
+      ctx.lineTo(x0 - 20, y + i*8 + 6);
+      ctx.stroke();
+    }
+  } else {
+    // Pin
+    drawPin(ctx, x0, y + 2);
+  }
+
+  // Right support
+  if (support === 'fixfix') {
+    ctx.fillStyle = '#30363d';
+    ctx.fillRect(x1 + 2, y, 10, 30);
+    ctx.strokeRect(x1 + 2, y, 10, 30);
+  } else if (support !== 'cantilever') {
+    drawPin(ctx, x1, y + 2);
+  }
+}
+
+function drawPin(ctx, x, y) {
+  ctx.strokeStyle = '#8b949e';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x - 8, y + 12);
+  ctx.lineTo(x + 8, y + 12);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - 10, y + 14);
+  ctx.lineTo(x + 10, y + 14);
+  ctx.stroke();
+}
+
+function getSFD(support, n, Vu) {
+  const pts = [];
+  for (let i = 0; i <= n; i++) {
+    const x = i / n;
+    switch(support) {
+      case 'pinpin': pts.push(Vu - 2*Vu*x); break;
+      case 'fixfix': pts.push(Vu - 2*Vu*x); break;
+      case 'fixpin': pts.push(Vu - (5/4*Vu/1) * (i/n) + 0); // approx
+        pts.pop(); pts.push((5/8)*Vu*(1-2*x)); break;
+      case 'cantilever': pts.push(Vu*(1-x)); break;
+    }
+  }
+  if (support === 'fixpin') {
+    const pts2 = [];
+    for (let i = 0; i <= n; i++) {
+      const x = i/n;
+      pts2.push(Vu - 2*Vu*x);
+    }
+    return pts2;
+  }
+  return pts;
+}
+
+function getBMD(support, n, Mu_max, Mu_neg) {
+  const pts = [];
+  for (let i = 0; i <= n; i++) {
+    const x = i / n;
+    switch(support) {
+      case 'pinpin': pts.push(4*Mu_max*x*(1-x)); break;
+      case 'cantilever': pts.push(Mu_max*(1-x)*(1-x)); break;
+      case 'fixfix': {
+        const m = Mu_neg + (Mu_max + 2*Mu_neg)*x - (Mu_max + 2*Mu_neg)*x*x;
+        pts.push(Math.max(0, m * 0.7 + 4*Mu_max*x*(1-x)*0.3));
+        break;
+      }
+      case 'fixpin': {
+        pts.push(Mu_neg*(1-3*x*x+2*x*x*x) + (2*Mu_max)*x*(1-x));
+        break;
+      }
+    }
+  }
+  return pts;
+}
+
+function drawSection(b, h, cover, d, As_mm2, barBot, barTop, stirD) {
+  const canvas = document.getElementById('section-canvas');
+  canvas.width = 200 * (window.devicePixelRatio || 1);
+  canvas.height = 240 * (window.devicePixelRatio || 1);
+  const dpr = window.devicePixelRatio || 1;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = 200, H = 240;
+  ctx.clearRect(0, 0, W, H);
+
+  const scale = Math.min((W - 50) / b, (H - 60) / h);
+  const sw = b * scale, sh = h * scale;
+  const ox = (W - sw) / 2, oy = 10 + (H - 60 - sh) / 2;
+
+  // Section outline
+  ctx.fillStyle = 'rgba(88,166,255,0.06)';
+  ctx.fillRect(ox, oy, sw, sh);
+  ctx.strokeStyle = '#8b949e';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(ox, oy, sw, sh);
+
+  // Cover dashed line
+  const cv = cover * scale;
+  const stD = (stirD || 12) * scale;
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([3, 3]);
+  ctx.strokeRect(ox + cv, oy + cv, sw - 2*cv, sh - 2*cv);
+  ctx.setLineDash([]);
+
+  // Stirrup (rectangle inside cover)
+  ctx.strokeStyle = '#6e7681';
+  ctx.lineWidth = Math.max(0.8, stD * 0.6);
+  ctx.strokeRect(ox + cv, oy + cv, sw - 2*cv, sh - 2*cv);
+
+  // Bottom bars (เหล็กล่าง - tension)
+  const nBot = barBot ? barBot.n : Math.max(2, Math.round(As_mm2 / 380));
+  const barDbot = barBot ? Math.min(sw * 0.09, barBot.bar.d * scale * 0.9, 9) : 6;
+  const barYbot = oy + sh - cv - barDbot * 0.5;
+  const spacingBot = (sw - 2*cv - 2*stD) / (nBot - 1 || 1);
+  const xStartBot = ox + cv + stD + barDbot * 0.5;
+
+  ctx.fillStyle = '#f0883e';
+  for (let i = 0; i < nBot; i++) {
+    const bx = nBot === 1 ? ox + sw/2 : xStartBot + spacingBot * i;
+    ctx.beginPath();
+    ctx.arc(bx, barYbot, barDbot/2, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // Top bars (เหล็กบน - compression)
+  const nTop = barTop ? barTop.n : 2;
+  const barDtop = barTop ? Math.min(sw * 0.09, barTop.bar.d * scale * 0.9, 9) : 5;
+  const barYtop = oy + cv + barDtop * 0.5;
+  const spacingTop = (sw - 2*cv - 2*stD) / (nTop - 1 || 1);
+  const xStartTop = ox + cv + stD + barDtop * 0.5;
+
+  ctx.fillStyle = '#58a6ff';
+  for (let i = 0; i < nTop; i++) {
+    const bx = nTop === 1 ? ox + sw/2 : xStartTop + spacingTop * i;
+    ctx.beginPath();
+    ctx.arc(bx, barYtop, barDtop/2, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // Dimensions text
+  ctx.fillStyle = '#8b949e';
+  ctx.font = `${9}px IBM Plex Mono, monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText(b + ' mm', ox + sw/2, oy + sh + 14);
+
+  ctx.save();
+  ctx.translate(ox - 14, oy + sh/2);
+  ctx.rotate(-Math.PI/2);
+  ctx.fillText(h + ' mm', 0, 0);
+  ctx.restore();
+
+  // Bar labels
+  ctx.font = `bold ${8}px IBM Plex Mono, monospace`;
+  ctx.textAlign = 'center';
+  // Bottom label
+  const botLbl = barBot ? `${nBot}${barBot.bar.label}` : `${nBot}DB`;
+  ctx.fillStyle = '#f0883e';
+  ctx.fillText(botLbl, ox + sw/2, oy + sh + 26);
+  // Top label
+  const topLbl = barTop ? `${nTop}${barTop.bar.label}` : `${nTop}DB`;
+  ctx.fillStyle = '#58a6ff';
+  ctx.fillText(topLbl, ox + sw/2, oy - 4);
+}
+
+function resetAll() {
+  document.getElementById('L').value = 6;
+  document.getElementById('b').value = 300;
+  document.getElementById('h').value = 500;
+  document.getElementById('cover').value = 40;
+  document.getElementById('fc').value = 28;
+  document.getElementById('fy').value = 390;
+  document.getElementById('Ec').value = '';
+  document.getElementById('DL').value = 20;
+  document.getElementById('LL').value = 15;
+  document.getElementById('fyt').value = 235;
+  document.getElementById('chk-rb9').checked  = true;
+  document.getElementById('chk-db12').checked = true;
+
+  document.getElementById('r-wu').textContent = '—';
+  document.getElementById('r-mu').textContent = '—';
+  document.getElementById('r-vu').textContent = '—';
+  document.getElementById('r-as-req').textContent = '—';
+  document.getElementById('r-rho').textContent = '—';
+  document.getElementById('r-phiMn').textContent = '—';
+
+  const badge = document.getElementById('design-badge');
+  badge.textContent = 'รอคำนวณ';
+  badge.className = 'badge badge-idle';
+
+  document.getElementById('summary-tbody').innerHTML = `
+    <tr><td colspan="4">
+      <div class="placeholder">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <rect x="5" y="16" width="30" height="8" rx="2" fill="currentColor"/>
+          <rect x="7" y="24" width="5" height="10" rx="1" fill="currentColor"/>
+          <rect x="28" y="24" width="5" height="10" rx="1" fill="currentColor"/>
+        </svg>
+        <p>กรอกข้อมูลและกด คำนวณออกแบบ</p>
+      </div>
+    </td></tr>`;
+
+  const dc = document.getElementById('diagram-canvas');
+  const sc = document.getElementById('section-canvas');
+  if (dc.getContext) dc.getContext('2d').clearRect(0,0,dc.width,dc.height);
+  if (sc.getContext) sc.getContext('2d').clearRect(0,0,sc.width,sc.height);
+}
+
+// Auto resize canvases
+window.addEventListener('resize', () => {
+  // rerun if there's data
+  const val = document.getElementById('r-wu').textContent;
+  if (val !== '—') calculate();
+});
+
+// Initial draw on load with defaults
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const dc = document.getElementById('diagram-canvas');
+    dc.width = dc.offsetWidth * (window.devicePixelRatio||1);
+    drawSection(300, 500, 40, 440, 1350, null, null, 12);
+  }, 100);
+});
+</script>
+</body>
+</html>

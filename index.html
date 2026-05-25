@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steel Calc — ถอดปริมาณเหล็ก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ── Reset & Variables ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c1118;--bg2:#131c27;--bg3:#1b2535;--bg4:#222f42;
+  --border:#1e2d3d;--border2:#2a3f57;
+  --text:#d4e4f4;--text2:#7a9ab8;--text3:#3d5470;
+  --blue:#3b82f6;--blue2:#1d4ed8;--blue-dim:rgba(59,130,246,0.12);
+  --green:#22c55e;--green-dim:rgba(34,197,94,0.12);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.12);
+  --red:#ef4444;--red-dim:rgba(239,68,68,0.12);
+  --purple:#a855f7;
+  --mono:'Share Tech Mono',monospace;
+  --sans:'Sarabun',sans-serif;
+  --radius:10px;
+}
+html{font-size:15px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── Typography ── */
+h1{font-size:22px;font-weight:600}
+h2{font-size:18px;font-weight:600}
+h3{font-size:15px;font-weight:600}
+
+/* ── Layout ── */
+.page{display:none;min-height:100vh}
+.page.active{display:block}
+
+/* ── Nav ── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 24px;height:54px;gap:12px;
+}
+.nav-logo{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:15px;color:var(--blue);letter-spacing:.04em}
+.nav-logo-box{width:30px;height:30px;background:var(--blue2);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.nav-user{font-size:12px;color:var(--text2)}
+
+/* ── Buttons ── */
+.btn{font-family:var(--sans);font-size:14px;font-weight:500;padding:9px 18px;border-radius:8px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--blue2);color:#fff}
+.btn-primary:hover:not(:disabled){background:#2563eb}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-ghost:hover:not(:disabled){border-color:var(--border2);color:var(--text);background:var(--bg3)}
+.btn-danger{background:var(--red-dim);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+.btn-danger:hover:not(:disabled){background:rgba(239,68,68,.22)}
+.btn-sm{padding:5px 12px;font-size:13px;border-radius:6px}
+.btn-full{width:100%;justify-content:center}
+.btn-icon{padding:7px;border-radius:7px}
+
+/* ── Forms ── */
+.field{margin-bottom:13px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;letter-spacing:.03em}
+input,select,textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:9px 12px;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+textarea{resize:vertical;min-height:72px;line-height:1.5}
+select{cursor:pointer}
+input[type=file]{padding:6px;cursor:pointer;font-size:13px}
+
+/* ── Auth ── */
+.auth-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% -20%,rgba(59,130,246,.1) 0%,transparent 60%)}
+.auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:38px 34px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:26px}
+.auth-logo-box{width:38px;height:38px;background:var(--blue2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;font-family:var(--mono)}
+.auth-logo-text{font-family:var(--mono);font-size:18px;color:var(--blue);letter-spacing:.04em}
+.auth-card h2{font-size:20px;margin-bottom:4px}
+.auth-card p{font-size:13px;color:var(--text2);margin-bottom:24px}
+.auth-switch{text-align:center;margin-top:16px;font-size:13px;color:var(--text2)}
+.auth-switch a{color:var(--blue);cursor:pointer;text-decoration:none}
+.auth-switch a:hover{text-decoration:underline}
+.divider-text{display:flex;align-items:center;gap:10px;margin:16px 0;font-size:12px;color:var(--text3)}
+.divider-text::before,.divider-text::after{content:'';flex:1;border-top:1px solid var(--border)}
+
+/* ── Dashboard ── */
+.shell{max-width:1000px;margin:0 auto;padding:28px 20px}
+.page-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}
+.page-top-left h2{font-size:20px}
+.page-top-left p{font-size:13px;color:var(--text2);margin-top:2px}
+
+/* Project cards */
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.project-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;cursor:pointer;transition:border-color .15s,transform .12s;display:flex;flex-direction:column;gap:6px}
+.project-card:hover{border-color:var(--blue2);transform:translateY(-2px)}
+.project-card-head{display:flex;align-items:center;justify-content:space-between}
+.project-card-name{font-size:16px;font-weight:600}
+.project-card-loc{font-size:12px;color:var(--text3)}
+.project-card-meta{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 9px;border-radius:99px;border:1px solid;font-weight:500}
+.tag-blue{background:var(--blue-dim);border-color:rgba(59,130,246,.3);color:#93c5fd}
+.tag-green{background:var(--green-dim);border-color:rgba(34,197,94,.3);color:#86efac}
+.tag-amber{background:var(--amber-dim);border-color:rgba(245,158,11,.3);color:#fcd34d}
+.project-card-date{font-size:11px;color:var(--text3)}
+
+/* Empty state */
+.empty{text-align:center;padding:56px 24px;color:var(--text2)}
+.empty-icon{font-size:48px;display:block;margin-bottom:12px;opacity:.35}
+.empty h3{font-size:17px;margin-bottom:6px;color:var(--text)}
+.empty p{font-size:13px;line-height:1.6}
+
+/* ── Project Detail ── */
+.project-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:54px;z-index:90}
+.btn-back{background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;padding:4px 8px;border-radius:6px;line-height:1}
+.btn-back:hover{color:var(--blue);background:var(--blue-dim)}
+.project-header-info{flex:1}
+.project-header-info h2{font-size:17px;font-weight:600}
+.project-header-info p{font-size:12px;color:var(--text2)}
+
+/* Stats bar */
+.stats-bar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.stat-box{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:12px 16px;flex:1;min-width:120px}
+.stat-box-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.stat-box-val{font-size:20px;font-weight:700;margin-top:2px;font-family:var(--mono)}
+.stat-box-val.blue{color:var(--blue)}
+.stat-box-val.green{color:var(--green)}
+.stat-box-val.amber{color:var(--amber)}
+
+/* Member list */
+.member-filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filter-btn{font-size:12px;padding:5px 14px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s}
+.filter-btn.active{background:var(--blue-dim);border-color:rgba(59,130,246,.4);color:#93c5fd}
+.member-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;transition:border-color .15s}
+.member-card:hover{border-color:var(--border2)}
+.member-card-head{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.member-type-badge{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.badge-column{background:rgba(168,85,247,.15);border:1px solid rgba(168,85,247,.3)}
+.badge-beam{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3)}
+.badge-slab{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3)}
+.badge-footing{background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.3)}
+.member-head-info{flex:1}
+.member-name{font-size:15px;font-weight:600}
+.member-sub{font-size:12px;color:var(--text3)}
+.member-weight{font-size:15px;font-weight:700;color:var(--green);font-family:var(--mono);margin-left:auto;padding-right:8px}
+.member-expand-icon{color:var(--text3);font-size:16px;transition:transform .2s}
+.member-card.open .member-expand-icon{transform:rotate(90deg)}
+.member-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border)}
+.member-card.open .member-body{display:block}
+
+/* Rebar table inside member */
+.rebar-table{width:100%;border-collapse:collapse;font-size:13px;margin:12px 0}
+.rebar-table th{background:var(--bg3);color:var(--text2);padding:7px 10px;text-align:left;border:1px solid var(--border);font-weight:500;font-size:12px;white-space:nowrap}
+.rebar-table td{padding:6px 10px;border:1px solid var(--border)}
+.rebar-table tr:hover td{background:rgba(59,130,246,.04)}
+.rebar-table input{background:transparent;border:none;color:var(--text);font-family:var(--sans);font-size:13px;width:100%;padding:0}
+.rebar-table input:focus{outline:none}
+.rebar-total-row td{background:var(--bg3);font-weight:600;color:var(--green)}
+
+/* Image preview */
+.drawing-preview{margin-top:10px}
+.drawing-preview img{max-width:100%;border-radius:8px;border:1px solid var(--border);max-height:260px;object-fit:contain}
+
+/* Member actions */
+.member-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+/* ── AI Scan Panel ── */
+.ai-panel{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:14px;margin-bottom:14px}
+.ai-panel-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;font-weight:500;color:var(--blue)}
+.upload-zone{border:1.5px dashed var(--border2);border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative;margin-bottom:10px}
+.upload-zone:hover{border-color:var(--blue);background:var(--blue-dim)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-zone-icon{font-size:26px;display:block;margin-bottom:5px}
+.upload-zone-text{font-size:12px;color:var(--text2)}
+
+/* ── Modals ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:500;padding:16px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:28px;width:100%;max-width:480px;box-shadow:0 24px 64px rgba(0,0,0,.5);animation:fadeUp .2s ease;max-height:90vh;overflow-y:auto}
+@keyframes fadeUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal h3{font-size:17px;font-weight:600;margin-bottom:4px}
+.modal .modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:22px;right:22px;z-index:999;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:11px 18px;font-size:14px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.4);transform:translateY(16px);opacity:0;transition:transform .25s,opacity .25s;pointer-events:none;max-width:300px}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.ok{border-color:var(--green);color:var(--green)}
+#toast.err{border-color:var(--red);color:var(--red)}
+
+/* ── Loading ── */
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.25);border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.page-loading{display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--text2);gap:10px;font-size:14px}
+
+/* ── Summary Page ── */
+.summary-shell{max-width:1000px;margin:0 auto;padding:28px 20px}
+.summary-hero{background:linear-gradient(135deg,var(--bg2) 0%,rgba(59,130,246,.08) 100%);border:1px solid var(--border);border-radius:14px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.summary-hero-left h2{font-size:22px;font-weight:700;margin-bottom:4px}
+.summary-hero-left p{font-size:13px;color:var(--text2)}
+.summary-hero-actions{display:flex;gap:10px;flex-wrap:wrap}
+.summary-kpi{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;transition:border-color .15s}
+.kpi-card:hover{border-color:var(--border2)}
+.kpi-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.kpi-val{font-size:24px;font-weight:700;font-family:var(--mono)}
+.kpi-unit{font-size:11px;color:var(--text2);margin-top:2px}
+.kpi-val.blue{color:var(--blue)}.kpi-val.green{color:var(--green)}.kpi-val.amber{color:var(--amber)}.kpi-val.purple{color:var(--purple)}
+
+.sum-section{margin-bottom:24px}
+.sum-section-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sum-section-title::after{content:'';flex:1;border-top:1px solid var(--border)}
+
+/* Diameter breakdown table */
+.diam-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.diam-card{background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:12px 16px;display:flex;align-items:center;gap:12px;transition:border-color .15s}
+.diam-card:hover{border-color:var(--blue2)}
+.diam-badge{width:42px;height:42px;border-radius:8px;background:var(--blue-dim);border:1px solid rgba(59,130,246,.3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;color:#93c5fd;flex-shrink:0}
+.diam-info .diam-name{font-size:13px;font-weight:600}
+.diam-info .diam-weight{font-size:15px;font-weight:700;font-family:var(--mono);color:var(--green)}
+.diam-info .diam-unit{font-size:11px;color:var(--text3)}
+
+/* Project breakdown table */
+.sum-table{width:100%;border-collapse:collapse;font-size:13px}
+.sum-table th{background:var(--bg3);color:var(--text2);padding:9px 14px;text-align:left;border:1px solid var(--border);font-weight:500;font-size:12px;white-space:nowrap}
+.sum-table td{padding:9px 14px;border:1px solid var(--border);vertical-align:middle}
+.sum-table tr:hover td{background:rgba(59,130,246,.04)}
+.sum-table .total-row td{background:var(--bg3);font-weight:700;color:var(--green);border-top:2px solid var(--border2)}
+.sum-table .mono{font-family:var(--mono)}
+.sum-table .tag-col{padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3);color:#d8b4fe}
+.sum-table .tag-beam{background:var(--blue-dim);border-color:rgba(59,130,246,.3);color:#93c5fd}
+.sum-table .tag-slab{background:var(--green-dim);border-color:rgba(34,197,94,.3);color:#86efac}
+.sum-table .tag-footing{background:var(--amber-dim);border-color:rgba(245,158,11,.3);color:#fcd34d}
+
+/* Bar chart */
+.bar-chart{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-label{width:90px;font-size:12px;font-family:var(--mono);color:var(--text2);text-align:right;flex-shrink:0}
+.bar-track{flex:1;background:var(--bg3);border-radius:4px;height:20px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue2),var(--blue));transition:width .6s cubic-bezier(.22,1,.36,1);display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:600;color:#fff;white-space:nowrap;min-width:0}
+.bar-kg{width:80px;font-size:12px;font-family:var(--mono);color:var(--green);flex-shrink:0;text-align:right}
+
+/* Loading/empty */
+.sum-loading{display:flex;align-items:center;justify-content:center;min-height:160px;color:var(--text2);gap:10px;font-size:14px}
+
+/* ── Responsive ── */
+@media(max-width:640px){
+  .shell{padding:16px 12px}
+  .auth-card{padding:26px 18px}
+  .project-header{padding:12px 14px}
+  .stats-bar{gap:8px}
+  .stat-box{min-width:100px;padding:10px 12px}
+  .summary-shell{padding:16px 12px}
+  .summary-hero{padding:16px}
+  .diam-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════
+  PAGE 1: AUTH
+══════════════════════════════════ -->
+<div class="page active" id="pg-auth">
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-box">SC</div>
+        <span class="auth-logo-text">Steel Calc</span>
+      </div>
+      <!-- LOGIN form -->
+      <div id="form-login">
+        <h2>เข้าสู่ระบบ</h2>
+        <p>ระบบถอดปริมาณเหล็กเสริม</p>
+        <div class="field"><label>อีเมล</label><input id="li-email" type="email" placeholder="email@example.com"></div>
+        <div class="field"><label>รหัสผ่าน</label><input id="li-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <button class="btn btn-primary btn-full" id="btn-login" onclick="doLogin()">เข้าสู่ระบบ</button>
+        <div class="auth-switch">ยังไม่มีบัญชี? <a onclick="toggleAuthForm('register')">สมัครสมาชิก</a></div>
+      </div>
+      <!-- REGISTER form -->
+      <div id="form-register" style="display:none">
+        <h2>สมัครสมาชิก</h2>
+        <p>สร้างบัญชีเพื่อใช้งาน Steel Calc</p>
+        <div class="field"><label>ชื่อ</label><input id="reg-name" type="text" placeholder="ชื่อ-นามสกุล"></div>
+        <div class="field"><label>อีเมล</label><input id="reg-email" type="email" placeholder="email@example.com"></div>
+        <div class="field"><label>รหัสผ่าน</label><input id="reg-pass" type="password" placeholder="อย่างน้อย 6 ตัวอักษร"></div>
+        <button class="btn btn-primary btn-full" id="btn-register" onclick="doRegister()">สมัครสมาชิก</button>
+        <div class="auth-switch">มีบัญชีแล้ว? <a onclick="toggleAuthForm('login')">เข้าสู่ระบบ</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+  NAV (shared, hidden on auth)
+══════════════════════════════════ -->
+<nav id="main-nav" style="display:none">
+  <div class="nav-logo"><div class="nav-logo-box">SC</div>Steel Calc</div>
+  <div class="nav-right">
+    <button class="btn btn-ghost btn-sm" onclick="goSummary()" title="สรุปวัสดุทั้งหมด">📊 Sum up</button>
+    <span class="nav-user" id="nav-user-email"></span>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()">ออกจากระบบ</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════
+  PAGE 2: DASHBOARD (Projects)
+══════════════════════════════════ -->
+<div class="page" id="pg-dashboard">
+  <div class="shell">
+    <div class="page-top">
+      <div class="page-top-left">
+        <h2>โปรเจกต์ของฉัน</h2>
+        <p>เลือกโปรเจกต์เพื่อดูรายการเสา/คาน</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="goSummary()">📊 สรุปวัสดุทั้งโครงการ</button>
+        <button class="btn btn-primary" onclick="openModal('modal-new-project')">＋ โปรเจกต์ใหม่</button>
+      </div>
+    </div>
+    <div id="projects-container">
+      <div class="page-loading"><span class="spinner"></span> กำลังโหลด...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+  PAGE 3: PROJECT DETAIL (Members)
+══════════════════════════════════ -->
+<div class="page" id="pg-project">
+  <!-- sticky header -->
+  <div class="project-header" id="project-header">
+    <button class="btn-back" onclick="goDashboard()">‹</button>
+    <div class="project-header-info">
+      <h2 id="proj-title">โปรเจกต์</h2>
+      <p id="proj-sub"></p>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="btn-open-ai" onclick="openAIPage()" title="ใช้ AI ถอดแบบจากรูปแบบ (QuantiTake)" style="border-color:rgba(34,211,238,.4);color:#22d3ee">🤖 AI ถอดแบบ</button>
+    <button class="btn btn-ghost btn-sm" id="btn-open-beam" onclick="openBeamPage()" title="ออกแบบคาน คสล. (Beam Design)" style="border-color:rgba(240,136,62,.4);color:#f0883e">🏗 ออกแบบคาน</button>
+    <button class="btn btn-ghost btn-sm" onclick="openModal('modal-new-member')">＋ เพิ่มเสา/คาน</button>
+  </div>
+  <!-- content -->
+  <div class="shell" style="padding-top:16px">
+    <!-- stats -->
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-box"><div class="stat-box-label">รายการทั้งหมด</div><div class="stat-box-val blue" id="stat-total">—</div></div>
+      <div class="stat-box"><div class="stat-box-label">เสา</div><div class="stat-box-val" style="color:var(--purple)" id="stat-col">—</div></div>
+      <div class="stat-box"><div class="stat-box-label">คาน</div><div class="stat-box-val blue" id="stat-beam">—</div></div>
+      <div class="stat-box"><div class="stat-box-label">น้ำหนักรวม</div><div class="stat-box-val green" id="stat-weight">— กก.</div></div>
+    </div>
+    <!-- filters -->
+    <div class="member-filters">
+      <span style="font-size:12px;color:var(--text3)">กรอง:</span>
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">ทั้งหมด</button>
+      <button class="filter-btn" data-filter="column" onclick="setFilter('column',this)">🏛 เสา</button>
+      <button class="filter-btn" data-filter="beam" onclick="setFilter('beam',this)">📏 คาน</button>
+      <button class="filter-btn" data-filter="slab" onclick="setFilter('slab',this)">⬛ พื้น</button>
+      <button class="filter-btn" data-filter="footing" onclick="setFilter('footing',this)">🔩 ฐานราก</button>
+    </div>
+    <!-- members list -->
+    <div id="members-container">
+      <div class="page-loading"><span class="spinner"></span> กำลังโหลด...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+  PAGE 4: SUMMARY (Sum up data)
+══════════════════════════════════ -->
+<div class="page" id="pg-summary">
+  <div class="summary-shell">
+    <!-- Hero -->
+    <div class="summary-hero">
+      <div class="summary-hero-left">
+        <h2>📊 สรุปวัสดุ</h2>
+        <p id="sum-hero-sub">เลือกโครงการเพื่อดูสรุปทีละโครงการ หรือดูรวมทุกโครงการ</p>
+      </div>
+      <div class="summary-hero-actions">
+        <select id="sum-project-select" onchange="onSummaryProjectChange()" style="min-width:200px;font-size:13px">
+          <option value="__ALL__">📦 ทุกโครงการ (รวม)</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="loadSummary()">🔄 รีเฟรช</button>
+        <button class="btn btn-ghost btn-sm" id="btn-export-csv" onclick="exportSummaryCSV()">⬇ Export CSV</button>
+        <button class="btn btn-ghost btn-sm" onclick="goDashboard()">‹ กลับ</button>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="summary-kpi" id="sum-kpi">
+      <div class="sum-loading"><span class="spinner"></span> กำลังโหลด...</div>
+    </div>
+
+    <!-- Bar chart by diameter -->
+    <div class="sum-section">
+      <div class="sum-section-title">📐 เหล็กแยกตามขนาด</div>
+      <div id="sum-diam-chart" class="bar-chart"></div>
+    </div>
+
+    <!-- Diameter breakdown cards -->
+    <div class="sum-section">
+      <div class="sum-section-title">🔩 สรุปน้ำหนักตามขนาดเหล็ก</div>
+      <div class="diam-grid" id="sum-diam-grid"></div>
+    </div>
+
+    <!-- By member type -->
+    <div class="sum-section">
+      <div class="sum-section-title">🏗 แยกตามประเภทโครงสร้าง</div>
+      <div style="overflow-x:auto">
+        <table class="sum-table" id="sum-type-table">
+          <thead><tr><th>ประเภท</th><th>จำนวนชิ้น</th><th class="mono">น้ำหนักรวม (กก.)</th><th class="mono">น้ำหนักรวม (ตัน)</th><th>% ของทั้งหมด</th></tr></thead>
+          <tbody id="sum-type-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- By project -->
+    <div class="sum-section">
+      <div class="sum-section-title">📁 แยกตามโปรเจกต์</div>
+      <div style="overflow-x:auto">
+        <table class="sum-table" id="sum-proj-table">
+          <thead><tr>
+            <th>โปรเจกต์</th><th>สถานที่</th>
+            <th>เสา</th><th>คาน</th><th>พื้น</th><th>ฐานราก</th>
+            <th class="mono">น้ำหนัก (กก.)</th>
+          </tr></thead>
+          <tbody id="sum-proj-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Full member list -->
+    <div class="sum-section">
+      <div class="sum-section-title">📋 รายการทั้งหมด</div>
+      <div style="overflow-x:auto">
+        <table class="sum-table" id="sum-all-table">
+          <thead><tr>
+            <th>โปรเจกต์</th><th>ชื่อ/รหัส</th><th>ประเภท</th><th>ชั้น</th>
+            <th class="mono">น้ำหนัก (กก.)</th>
+            <th>เหล็กหลัก</th>
+          </tr></thead>
+          <tbody id="sum-all-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+  MODALS
+══════════════════════════════════ -->
+
+<!-- New Project -->
+<div class="modal-overlay" id="modal-new-project">
+  <div class="modal">
+    <h3>โปรเจกต์ใหม่</h3>
+    <div class="modal-sub">ระบุชื่อโครงการก่อสร้าง</div>
+    <div class="field"><label>ชื่อโปรเจกต์ *</label><input id="np-name" type="text" placeholder="เช่น อาคาร A สุขุมวิท 32"></div>
+    <div class="field"><label>คำอธิบาย</label><input id="np-desc" type="text" placeholder="เช่น คอนโด 20 ชั้น"></div>
+    <div class="field"><label>สถานที่</label><input id="np-loc" type="text" placeholder="เช่น กรุงเทพฯ"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-new-project')">ยกเลิก</button>
+      <button class="btn btn-primary btn-sm" id="btn-create-proj" onclick="createProject()">สร้างโปรเจกต์</button>
+    </div>
+  </div>
+</div>
+
+<!-- New/Edit Member -->
+<div class="modal-overlay" id="modal-new-member">
+  <div class="modal">
+    <h3 id="member-modal-title">เพิ่มเสา / คาน</h3>
+    <div class="modal-sub">กรอกข้อมูลหรือให้ AI ถอดจากรูปแบบ</div>
+
+    <!-- AI Scan -->
+    <div class="ai-panel">
+      <div class="ai-panel-head">✨ AI ถอดจากรูปแบบ</div>
+      <div class="upload-zone" id="ai-upload-zone">
+        <input type="file" id="ai-file" accept="image/*,.pdf" onchange="handleAIFile(this)">
+        <span class="upload-zone-icon">📐</span>
+        <div class="upload-zone-text">วางรูปแบบ/PDF หรือคลิกเลือก</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:3px">JPG, PNG, PDF</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="claude-key" type="password" placeholder="Anthropic API Key (sk-ant-...)" style="flex:1;font-size:13px">
+        <button class="btn btn-primary btn-sm" id="btn-ai-scan" onclick="runAIScan()">ถอดแบบ</button>
+      </div>
+      <div id="ai-status" style="font-size:12px;color:var(--text3);margin-top:6px"></div>
+    </div>
+
+    <!-- Basic info -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field"><label>ประเภท *</label>
+        <select id="m-type">
+          <option value="column">🏛 เสา (Column)</option>
+          <option value="beam">📏 คาน (Beam)</option>
+          <option value="slab">⬛ พื้น (Slab)</option>
+          <option value="footing">🔩 ฐานราก</option>
+        </select>
+      </div>
+      <div class="field"><label>ชั้น / ตำแหน่ง</label><input id="m-floor" type="text" placeholder="เช่น 1F, RF"></div>
+    </div>
+    <div class="field"><label>ชื่อ/รหัส *</label><input id="m-name" type="text" placeholder="เช่น C1, C2, B-GL1"></div>
+    <div class="field"><label>หมายเหตุ</label><input id="m-notes" type="text" placeholder="ข้อมูลเพิ่มเติม"></div>
+
+    <!-- Rebar rows -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <span style="font-size:13px;font-weight:500">รายการเหล็ก</span>
+      <button class="btn btn-ghost btn-sm" onclick="addRebarRow()">＋ เพิ่มแถว</button>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="rebar-table" id="rebar-input-table">
+        <thead><tr>
+          <th>Mark</th><th>ขนาด (มม.)</th><th>ยาว (มม.)</th><th>จำนวน</th><th>น้ำหนัก (กก.)</th><th></th>
+        </tr></thead>
+        <tbody id="rebar-tbody"></tbody>
+      </table>
+    </div>
+    <div style="text-align:right;font-size:13px;color:var(--green);margin-top:4px">
+      น้ำหนักรวม: <strong id="modal-total-weight">0.00</strong> กก.
+    </div>
+
+    <!-- Image upload -->
+    <div class="field" style="margin-top:12px">
+      <label>แนบรูปแบบ (ไม่บังคับ)</label>
+      <input type="file" id="m-image" accept="image/*" onchange="previewImage(this)">
+      <img id="m-image-preview" style="max-width:100%;border-radius:8px;margin-top:8px;display:none;border:1px solid var(--border)">
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn btn-ghost btn-sm" onclick="closeMemberModal()">ยกเลิก</button>
+      <button class="btn btn-primary btn-sm" id="btn-save-member" onclick="saveMember()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+  SCRIPTS
+══════════════════════════════════ -->
+<script>
+// ── Supabase Init ─────────────────────────────────────────
+const SUPA_URL = 'https://rgzfkmpulyrqtctvimtn.supabase.co';
+const SUPA_KEY = 'sb_publishable_0mdDY6zPN3WsqyCij7eWzA_jto1lMp4';
+const { createClient } = supabase;
+const db = createClient(SUPA_URL, SUPA_KEY);
+
+// ── State ─────────────────────────────────────────────────
+let currentUser = null;
+let currentProject = null;
+let allMembers = [];
+let currentFilter = 'all';
+let editingMemberId = null;
+
+// Rebar weight per meter (กก./ม.)
+const REBAR_WEIGHT = {6:.222,9:.499,10:.617,12:.888,16:1.578,20:2.466,25:3.853,28:4.834,32:6.313};
+
+// ── Init ─────────────────────────────────────────────────
+(async()=>{
+  const {data:{session}} = await db.auth.getSession();
+  if(session){
+    currentUser = session.user;
+    showAppFor(currentUser);
+  }
+  db.auth.onAuthStateChange((_,session)=>{
+    if(session){ currentUser=session.user; showAppFor(currentUser); }
+    else{ currentUser=null; showPage('pg-auth'); hideNav(); }
+  });
+})();
+
+// ── Auth ─────────────────────────────────────────────────
+function toggleAuthForm(f){
+  document.getElementById('form-login').style.display  = f==='login'    ? '':'none';
+  document.getElementById('form-register').style.display = f==='register' ? '':'none';
+}
+
+async function doLogin(){
+  const email=v('li-email'), pass=v('li-pass');
+  if(!email||!pass) return toast('กรุณากรอกข้อมูลให้ครบ','err');
+  setBtnLoading('btn-login',true);
+  try{
+    const {error}=await db.auth.signInWithPassword({email,password:pass});
+    if(error) throw error;
+  }catch(e){ toast('เข้าสู่ระบบไม่สำเร็จ: '+e.message,'err'); }
+  finally{ setBtnLoading('btn-login',false); }
+}
+
+async function doRegister(){
+  const name=v('reg-name'), email=v('reg-email'), pass=v('reg-pass');
+  if(!name||!email||!pass) return toast('กรุณากรอกข้อมูลให้ครบ','err');
+  if(pass.length<6) return toast('รหัสผ่านต้องอย่างน้อย 6 ตัวอักษร','err');
+  setBtnLoading('btn-register',true);
+  try{
+    const {error}=await db.auth.signUp({email,password:pass,options:{data:{display_name:name}}});
+    if(error) throw error;
+    toast('สมัครสมาชิกสำเร็จ! กรุณาตรวจสอบอีเมลยืนยัน','ok');
+    toggleAuthForm('login');
+  }catch(e){ toast('สมัครสมาชิกไม่สำเร็จ: '+e.message,'err'); }
+  finally{ setBtnLoading('btn-register',false); }
+}
+
+async function doLogout(){
+  await db.auth.signOut();
+}
+
+function showAppFor(user){
+  document.getElementById('nav-user-email').textContent = user.email;
+  showNav();
+  showPage('pg-dashboard');
+  loadProjects();
+}
+
+// ── Projects ─────────────────────────────────────────────
+async function loadProjects(){
+  const container = document.getElementById('projects-container');
+  container.innerHTML = '<div class="page-loading"><span class="spinner"></span> กำลังโหลด...</div>';
+  try{
+    const {data,error} = await db.from('projects').select('*').order('updated_at',{ascending:false});
+    if(error) throw error;
+    renderProjects(data||[]);
+  }catch(e){ container.innerHTML=`<div class="empty"><span class="empty-icon">⚠️</span><h3>เกิดข้อผิดพลาด</h3><p>${e.message}</p></div>`; }
+}
+
+function renderProjects(projects){
+  const c = document.getElementById('projects-container');
+  if(!projects.length){
+    c.innerHTML=`<div class="empty"><span class="empty-icon">📁</span><h3>ยังไม่มีโปรเจกต์</h3><p>กด "โปรเจกต์ใหม่" เพื่อเริ่มต้น</p></div>`;
+    return;
+  }
+  c.innerHTML=`<div class="projects-grid">${projects.map(p=>`
+    <div class="project-card" onclick="openProject('${p.id}','${esc(p.name)}','${esc(p.description||'')}','${esc(p.location||'')}')">
+      <div class="project-card-head">
+        <span class="project-card-name">${p.name}</span>
+      </div>
+      ${p.location?`<div class="project-card-loc">📍 ${p.location}</div>`:''}
+      ${p.description?`<div style="font-size:13px;color:var(--text2)">${p.description}</div>`:''}
+      <div class="project-card-date">อัพเดต ${timeAgo(p.updated_at)}</div>
+    </div>
+  `).join('')}</div>`;
+}
+
+async function createProject(){
+  const name=v('np-name');
+  if(!name) return toast('กรุณาใส่ชื่อโปรเจกต์','err');
+  setBtnLoading('btn-create-proj',true);
+  try{
+    const {error}=await db.from('projects').insert({
+      user_id:currentUser.id, name, description:v('np-desc'), location:v('np-loc')
+    });
+    if(error) throw error;
+    closeModal('modal-new-project');
+    clearFields(['np-name','np-desc','np-loc']);
+    toast('สร้างโปรเจกต์สำเร็จ ✓','ok');
+    loadProjects();
+  }catch(e){ toast('เกิดข้อผิดพลาด: '+e.message,'err'); }
+  finally{ setBtnLoading('btn-create-proj',false); }
+}
+
+// ── Project Detail ────────────────────────────────────────
+function openProject(id,name,desc,loc){
+  currentProject = {id,name,desc,loc};
+  document.getElementById('proj-title').textContent = name;
+  document.getElementById('proj-sub').textContent = [loc,desc].filter(Boolean).join(' · ');
+  showPage('pg-project');
+  loadMembers();
+}
+
+function goDashboard(){
+  showPage('pg-dashboard');
+  loadProjects();
+}
+
+async function loadMembers(){
+  const c = document.getElementById('members-container');
+  c.innerHTML='<div class="page-loading"><span class="spinner"></span> กำลังโหลด...</div>';
+  try{
+    const {data,error}=await db.from('members').select('*').eq('project_id',currentProject.id).order('created_at');
+    if(error) throw error;
+    allMembers = data||[];
+    updateStats();
+    renderMembers();
+  }catch(e){ c.innerHTML=`<div class="empty"><span class="empty-icon">⚠️</span><h3>เกิดข้อผิดพลาด</h3><p>${e.message}</p></div>`; }
+}
+
+function updateStats(){
+  const total=allMembers.length;
+  const cols=allMembers.filter(m=>m.member_type==='column').length;
+  const beams=allMembers.filter(m=>m.member_type==='beam').length;
+  const weight=allMembers.reduce((s,m)=>s+(m.total_weight_kg||0),0);
+  document.getElementById('stat-total').textContent=total;
+  document.getElementById('stat-col').textContent=cols;
+  document.getElementById('stat-beam').textContent=beams;
+  document.getElementById('stat-weight').textContent=weight.toFixed(1)+' กก.';
+}
+
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMembers();
+}
+
+function renderMembers(){
+  const c=document.getElementById('members-container');
+  const filtered = currentFilter==='all' ? allMembers : allMembers.filter(m=>m.member_type===currentFilter);
+  if(!filtered.length){
+    c.innerHTML=`<div class="empty"><span class="empty-icon">📋</span><h3>ไม่มีรายการ</h3><p>กด "เพิ่มเสา/คาน" เพื่อเพิ่มรายการแรก</p></div>`;
+    return;
+  }
+  c.innerHTML = filtered.map(m=>memberCardHTML(m)).join('');
+}
+
+const typeIcon={column:'🏛',beam:'📏',slab:'⬛',footing:'🔩'};
+const typeBadge={column:'badge-column',beam:'badge-beam',slab:'badge-slab',footing:'badge-footing'};
+const typeName={column:'เสา',beam:'คาน',slab:'พื้น',footing:'ฐานราก'};
+
+function memberCardHTML(m){
+  const rebars=m.rebars||[];
+  const rebarRows=rebars.map(r=>`
+    <tr>
+      <td>${r.mark||'-'}</td>
+      <td style="font-family:var(--mono)">DB${r.diameter}</td>
+      <td style="font-family:var(--mono)">${Number(r.length_mm||0).toLocaleString()}</td>
+      <td style="font-family:var(--mono)">${r.quantity||0}</td>
+      <td style="font-family:var(--mono);color:var(--green)">${(r.weight_kg||0).toFixed(2)}</td>
+      <td style="font-size:11px;color:var(--text3)">${r.note||''}</td>
+    </tr>`).join('');
+  return `
+  <div class="member-card" id="mc-${m.id}">
+    <div class="member-card-head" onclick="toggleMember('${m.id}')">
+      <div class="member-type-badge ${typeBadge[m.member_type]||'badge-column'}">${typeIcon[m.member_type]||'🔩'}</div>
+      <div class="member-head-info">
+        <div class="member-name">${m.name}</div>
+        <div class="member-sub">${typeName[m.member_type]||m.member_type}${m.floor?' · ชั้น '+m.floor:''} · ${rebars.length} รายการเหล็ก</div>
+      </div>
+      <div class="member-weight">${(m.total_weight_kg||0).toFixed(1)} กก.</div>
+      <span class="member-expand-icon">›</span>
+    </div>
+    <div class="member-body">
+      ${rebars.length?`
+      <div style="overflow-x:auto">
+        <table class="rebar-table">
+          <thead><tr><th>Mark</th><th>ขนาด</th><th>ยาว (มม.)</th><th>จำนวน</th><th>น้ำหนัก (กก.)</th><th>หมายเหตุ</th></tr></thead>
+          <tbody>${rebarRows}</tbody>
+          <tr class="rebar-total-row"><td colspan="4" style="text-align:right;padding:6px 10px">น้ำหนักรวม</td><td>${(m.total_weight_kg||0).toFixed(2)} กก.</td><td></td></tr>
+        </table>
+      </div>`:'<p style="font-size:13px;color:var(--text3);padding:8px 0">ยังไม่มีรายการเหล็ก</p>'}
+      ${m.notes?`<div style="font-size:12px;color:var(--text2);margin-top:6px">📝 ${m.notes}</div>`:''}
+      ${m.image_url?`<div class="drawing-preview"><img src="${m.image_url}" alt="แบบ" loading="lazy"></div>`:''}
+      <div class="member-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openEditMember('${m.id}')">✏ แก้ไข</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteMember('${m.id}','${esc(m.name)}')">🗑 ลบ</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleMember(id){
+  const card=document.getElementById('mc-'+id);
+  card.classList.toggle('open');
+}
+
+// ── Save Member ───────────────────────────────────────────
+function openEditMember(id){
+  const m=allMembers.find(x=>x.id===id);
+  if(!m) return;
+  editingMemberId=id;
+  document.getElementById('member-modal-title').textContent='แก้ไข '+m.name;
+  document.getElementById('m-type').value=m.member_type;
+  document.getElementById('m-floor').value=m.floor||'';
+  document.getElementById('m-name').value=m.name;
+  document.getElementById('m-notes').value=m.notes||'';
+  // load rebars
+  const tbody=document.getElementById('rebar-tbody');
+  tbody.innerHTML='';
+  (m.rebars||[]).forEach(r=>addRebarRow(r));
+  recalcTotal();
+  if(m.image_url){
+    const img=document.getElementById('m-image-preview');
+    img.src=m.image_url; img.style.display='block';
+  }
+  openModal('modal-new-member');
+}
+
+function closeMemberModal(){
+  editingMemberId=null;
+  document.getElementById('member-modal-title').textContent='เพิ่มเสา / คาน';
+  clearFields(['m-type','m-floor','m-name','m-notes','ai-status']);
+  document.getElementById('rebar-tbody').innerHTML='';
+  document.getElementById('m-image-preview').style.display='none';
+  document.getElementById('m-image').value='';
+  document.getElementById('ai-file').value='';
+  document.getElementById('modal-total-weight').textContent='0.00';
+  closeModal('modal-new-member');
+}
+
+async function saveMember(){
+  const name=v('m-name');
+  if(!name) return toast('กรุณาใส่ชื่อ/รหัส','err');
+  const rebars=collectRebars();
+  const totalWeight=rebars.reduce((s,r)=>s+(r.weight_kg||0),0);
+  setBtnLoading('btn-save-member',true);
+  try{
+    // upload image if selected
+    let imageUrl=null;
+    const imgFile=document.getElementById('m-image').files[0];
+    if(imgFile){
+      const ext=imgFile.name.split('.').pop();
+      const path=`${currentUser.id}/${Date.now()}.${ext}`;
+      const {error:upErr}=await db.storage.from('drawings').upload(path,imgFile,{upsert:true});
+      if(upErr) throw upErr;
+      const {data:urlData}=db.storage.from('drawings').getPublicUrl(path);
+      imageUrl=urlData.publicUrl;
+    }
+
+    const payload={
+      project_id:currentProject.id,
+      user_id:currentUser.id,
+      member_type:v('m-type'),
+      floor:v('m-floor')||null,
+      name,
+      rebars,
+      total_weight_kg:parseFloat(totalWeight.toFixed(2)),
+      notes:v('m-notes')||null,
+      ...(imageUrl?{image_url:imageUrl}:{})
+    };
+
+    if(editingMemberId){
+      const {error}=await db.from('members').update(payload).eq('id',editingMemberId);
+      if(error) throw error;
+      toast('อัพเดตสำเร็จ ✓','ok');
+    } else {
+      const {error}=await db.from('members').insert(payload);
+      if(error) throw error;
+      toast('บันทึกสำเร็จ ✓','ok');
+    }
+    // update project updated_at
+    await db.from('projects').update({updated_at:new Date().toISOString()}).eq('id',currentProject.id);
+    closeMemberModal();
+    loadMembers();
+  }catch(e){ toast('บันทึกไม่สำเร็จ: '+e.message,'err'); }
+  finally{ setBtnLoading('btn-save-member',false); }
+}
+
+async function deleteMember(id,name){
+  if(!confirm(`ลบ "${name}" ใช่ไหม?`)) return;
+  try{
+    const {error}=await db.from('members').delete().eq('id',id);
+    if(error) throw error;
+    toast('ลบแล้ว','ok');
+    loadMembers();
+  }catch(e){ toast('ลบไม่สำเร็จ: '+e.message,'err'); }
+}
+
+// ── Rebar rows ────────────────────────────────────────────
+function addRebarRow(data={}){
+  const tbody=document.getElementById('rebar-tbody');
+  const tr=document.createElement('tr');
+  const diams=[6,9,10,12,16,20,25,28,32];
+  const opts=diams.map(d=>`<option value="${d}" ${d==data.diameter?'selected':''}>${d}</option>`).join('');
+  tr.innerHTML=`
+    <td><input type="text"   class="rb-mark"   value="${data.mark||''}"       placeholder="T1" style="width:50px"></td>
+    <td><select class="rb-diam" onchange="recalcRow(this)">${opts}</select></td>
+    <td><input type="number" class="rb-len"    value="${data.length_mm||''}"  placeholder="6000" min="1" onchange="recalcRow(this)" style="width:80px"></td>
+    <td><input type="number" class="rb-qty"    value="${data.quantity||1}"    placeholder="1"    min="1" onchange="recalcRow(this)" style="width:55px"></td>
+    <td><input type="number" class="rb-wt"     value="${data.weight_kg?data.weight_kg.toFixed(2):''}" readonly placeholder="auto" style="width:70px;color:var(--green)"></td>
+    <td><button class="btn btn-ghost btn-sm btn-icon" onclick="this.closest('tr').remove();recalcTotal()">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  recalcRow(tr.querySelector('.rb-diam'));
+}
+
+function recalcRow(el){
+  const tr=el.closest('tr');
+  const diam=parseInt(tr.querySelector('.rb-diam').value);
+  const len=parseFloat(tr.querySelector('.rb-len').value)||0;
+  const qty=parseInt(tr.querySelector('.rb-qty').value)||0;
+  const wpm=REBAR_WEIGHT[diam]||0;
+  const w=(len/1000)*qty*wpm;
+  tr.querySelector('.rb-wt').value=w>0?w.toFixed(2):'';
+  recalcTotal();
+}
+
+function recalcTotal(){
+  let total=0;
+  document.querySelectorAll('#rebar-tbody tr').forEach(tr=>{
+    total+=parseFloat(tr.querySelector('.rb-wt').value)||0;
+  });
+  document.getElementById('modal-total-weight').textContent=total.toFixed(2);
+}
+
+function collectRebars(){
+  const rows=[];
+  document.querySelectorAll('#rebar-tbody tr').forEach(tr=>{
+    const len=parseFloat(tr.querySelector('.rb-len').value);
+    const qty=parseInt(tr.querySelector('.rb-qty').value);
+    if(!len||!qty) return;
+    rows.push({
+      mark:tr.querySelector('.rb-mark').value||'',
+      diameter:parseInt(tr.querySelector('.rb-diam').value),
+      length_mm:len, quantity:qty,
+      weight_kg:parseFloat(tr.querySelector('.rb-wt').value)||0,
+      note:''
+    });
+  });
+  return rows;
+}
+
+// ── AI Scanner ────────────────────────────────────────────
+let aiFileData=null;
+function handleAIFile(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{aiFileData={base64:reader.result.split(',')[1],mime:file.type||'image/jpeg',name:file.name};};
+  reader.readAsDataURL(file);
+  document.getElementById('ai-upload-zone').style.borderColor='var(--green)';
+  // also preview if image
+  if(file.type.startsWith('image/')){
+    const img=document.getElementById('m-image-preview');
+    img.src=URL.createObjectURL(file); img.style.display='block';
+  }
+}
+
+async function runAIScan(){
+  if(!aiFileData) return toast('กรุณาเลือกไฟล์แบบก่อน','err');
+  const key=document.getElementById('claude-key').value.trim();
+  if(!key) return toast('กรุณาใส่ Anthropic API Key','err');
+  localStorage.setItem('sc_claude_key',key);
+
+  const status=document.getElementById('ai-status');
+  setBtnLoading('btn-ai-scan',true);
+  status.textContent='⏳ AI กำลังวิเคราะห์แบบ...';
+
+  const prompt=`คุณคือผู้เชี่ยวชาญถอดแบบเหล็กเสริมคอนกรีตมาตรฐานไทย
+วิเคราะห์แบบและตอบด้วย JSON เท่านั้น ห้ามมี text อื่น:
+{
+  "member_type": "column|beam|slab|footing",
+  "name": "ชื่อ/รหัส เช่น C1",
+  "floor": "ชั้น เช่น 1F",
+  "rebars": [
+    {"mark":"T1","diameter":16,"length_mm":6000,"quantity":8,"note":""}
+  ],
+  "notes": "หมายเหตุ"
+}
+น้ำหนักต่อเมตร: RB6=0.222,RB9=0.499,DB10=0.617,DB12=0.888,DB16=1.578,DB20=2.466,DB25=3.853,DB28=4.834,DB32=6.313`;
+
+  try{
+    const isPdf=aiFileData.mime==='application/pdf';
+    const contentItem=isPdf
+      ?{type:'document',source:{type:'base64',media_type:'application/pdf',data:aiFileData.base64}}
+      :{type:'image',source:{type:'base64',media_type:aiFileData.mime,data:aiFileData.base64}};
+
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:2000,system:prompt,
+        messages:[{role:'user',content:[contentItem,{type:'text',text:'ถอดรายการเหล็กเสริมทั้งหมดจากแบบนี้'}]}]})
+    });
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'API Error '+res.status);}
+    const data=await res.json();
+    const raw=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    const clean=raw.replace(/```json|```/g,'').trim();
+    let parsed;
+    try{ parsed=JSON.parse(clean); }
+    catch{ const m=raw.match(/\{[\s\S]*\}/); parsed=m?JSON.parse(m[0]):null; }
+    if(!parsed) throw new Error('AI ตอบกลับในรูปแบบที่ไม่ถูกต้อง');
+
+    // populate form
+    if(parsed.member_type) document.getElementById('m-type').value=parsed.member_type;
+    if(parsed.name) document.getElementById('m-name').value=parsed.name;
+    if(parsed.floor) document.getElementById('m-floor').value=parsed.floor;
+    if(parsed.notes) document.getElementById('m-notes').value=parsed.notes;
+    document.getElementById('rebar-tbody').innerHTML='';
+    (parsed.rebars||[]).forEach(r=>addRebarRow(r));
+    recalcTotal();
+    status.style.color='var(--green)';
+    status.textContent='✓ AI ถอดแบบสำเร็จ กรุณาตรวจสอบก่อนบันทึก';
+  }catch(e){
+    status.style.color='var(--red)';
+    status.textContent='⚠ '+e.message;
+  }finally{ setBtnLoading('btn-ai-scan',false); }
+}
+
+// ── Image preview ─────────────────────────────────────────
+function previewImage(input){
+  const file=input.files[0];
+  if(!file) return;
+  const img=document.getElementById('m-image-preview');
+  img.src=URL.createObjectURL(file);
+  img.style.display='block';
+}
+
+// ── UI Helpers ────────────────────────────────────────────
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showNav(){ document.getElementById('main-nav').style.display='flex'; }
+function hideNav(){ document.getElementById('main-nav').style.display='none'; }
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+// close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{
+  if(e.target===o){ if(o.id==='modal-new-member') closeMemberModal(); else o.classList.remove('show'); }
+}));
+
+let _toast;
+function toast(msg,type=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show'+(type?' '+type:'');
+  clearTimeout(_toast); _toast=setTimeout(()=>el.classList.remove('show'),3200);
+}
+
+function setBtnLoading(id,on){
+  const b=document.getElementById(id); if(!b) return;
+  b.disabled=on;
+  if(on){ b.dataset.orig=b.textContent; b.innerHTML='<span class="spinner"></span> กำลังดำเนินการ...'; }
+  else{ b.innerHTML=b.dataset.orig||b.textContent; }
+}
+
+function v(id){ return document.getElementById(id)?.value?.trim()||''; }
+function clearFields(ids){ ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); }
+function esc(s){ return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+function timeAgo(d){
+  const m=Math.floor((Date.now()-new Date(d))/60000);
+  if(m<1) return 'เมื่อกี้'; if(m<60) return m+'นาทีที่แล้ว';
+  const h=Math.floor(m/60); if(h<24) return h+'ชม.ที่แล้ว';
+  return Math.floor(h/24)+'วันที่แล้ว';
+}
+
+// ── Summary (Sum up data) ─────────────────────────────────
+let summaryData = null;          // computed dataset (for export, respects filter)
+let summaryRaw  = null;          // { proj:[], mem:[] } raw cache from DB
+let summaryProjectFilter = '__ALL__';
+
+async function goSummary(){
+  showPage('pg-summary');
+  // if opened from inside a project, default the filter to that project
+  if(currentProject?.id){ summaryProjectFilter = currentProject.id; }
+  await loadSummary();
+}
+
+async function loadSummary(){
+  // reset to loading
+  document.getElementById('sum-kpi').innerHTML='<div class="sum-loading"><span class="spinner"></span> กำลังโหลด...</div>';
+  document.getElementById('sum-diam-chart').innerHTML='';
+  document.getElementById('sum-diam-grid').innerHTML='';
+  document.getElementById('sum-type-tbody').innerHTML='';
+  document.getElementById('sum-proj-tbody').innerHTML='';
+  document.getElementById('sum-all-tbody').innerHTML='';
+
+  try{
+    const [{data:projects,error:pe},{data:members,error:me}] = await Promise.all([
+      db.from('projects').select('*').order('name'),
+      db.from('members').select('*').order('project_id')
+    ]);
+    if(pe) throw pe;
+    if(me) throw me;
+
+    summaryRaw = { proj: projects||[], mem: members||[] };
+
+    // populate the project selector (preserve current selection)
+    const sel = document.getElementById('sum-project-select');
+    const prev = summaryProjectFilter;
+    sel.innerHTML = '<option value="__ALL__">📦 ทุกโครงการ (รวม)</option>'
+      + summaryRaw.proj.map(p=>`<option value="${p.id}">📁 ${p.name}</option>`).join('');
+    // keep selection valid
+    if(prev!=='__ALL__' && !summaryRaw.proj.some(p=>p.id===prev)){ summaryProjectFilter='__ALL__'; }
+    sel.value = summaryProjectFilter;
+
+    computeAndRenderSummary();
+  }catch(e){
+    document.getElementById('sum-kpi').innerHTML=`<div class="empty"><span class="empty-icon">⚠️</span><h3>เกิดข้อผิดพลาด</h3><p>${e.message}</p></div>`;
+  }
+}
+
+function onSummaryProjectChange(){
+  summaryProjectFilter = document.getElementById('sum-project-select').value;
+  computeAndRenderSummary();
+}
+
+function computeAndRenderSummary(){
+  if(!summaryRaw) return;
+  const isAll = summaryProjectFilter === '__ALL__';
+
+  // scope projects + members to the selected filter
+  const proj = isAll ? summaryRaw.proj : summaryRaw.proj.filter(p=>p.id===summaryProjectFilter);
+  const mem  = isAll ? summaryRaw.mem  : summaryRaw.mem.filter(m=>m.project_id===summaryProjectFilter);
+
+  // update subtitle + hide the "by project" section when viewing a single project
+  const sub = document.getElementById('sum-hero-sub');
+  const projSection = document.getElementById('sum-proj-table')?.closest('.sum-section');
+  if(isAll){
+    sub.textContent = `รวมปริมาณเหล็กทุกโปรเจกต์ (${proj.length} โครงการ)`;
+    if(projSection) projSection.style.display='';
+  }else{
+    const name = proj[0]?.name || '—';
+    sub.textContent = `สรุปเฉพาะโครงการ: ${name}`;
+    if(projSection) projSection.style.display='none';
+  }
+
+  // ── Aggregate (scoped) ──
+  const totalWeight = mem.reduce((s,m)=>s+(m.total_weight_kg||0),0);
+  const totalMembers = mem.length;
+  const totalProjects = proj.length;
+
+  const byDiam = {};
+  mem.forEach(m=>{
+    (m.rebars||[]).forEach(r=>{
+      const d = r.diameter||0;
+      byDiam[d] = (byDiam[d]||0) + (r.weight_kg||0);
+    });
+  });
+
+  const types = ['column','beam','slab','footing'];
+  const byType = {};
+  types.forEach(t=>{ byType[t]={count:0,weight:0}; });
+  mem.forEach(m=>{
+    const t = m.member_type||'column';
+    if(!byType[t]) byType[t]={count:0,weight:0};
+    byType[t].count++;
+    byType[t].weight += (m.total_weight_kg||0);
+  });
+
+  const projMap = {};
+  proj.forEach(p=>{ projMap[p.id]={...p, counts:{column:0,beam:0,slab:0,footing:0}, weight:0}; });
+  mem.forEach(m=>{
+    if(projMap[m.project_id]){
+      projMap[m.project_id].counts[m.member_type||'column']++;
+      projMap[m.project_id].weight += (m.total_weight_kg||0);
+    }
+  });
+
+  summaryData = {proj, mem, totalWeight, totalMembers, totalProjects, byDiam, byType, projMap, isAll};
+  renderSummary(summaryData);
+}
+
+function renderSummary({proj,mem,totalWeight,totalMembers,totalProjects,byDiam,byType,projMap,isAll}){
+  const typeName={column:'เสา',beam:'คาน',slab:'พื้น',footing:'ฐานราก'};
+  const typeTag={column:'tag-col',beam:'tag-beam',slab:'tag-slab',footing:'tag-footing'};
+
+  // ── KPI cards ──
+  const numProj = totalProjects;
+  const numMem  = totalMembers;
+  const wKg     = totalWeight.toFixed(1);
+  const wTon    = (totalWeight/1000).toFixed(3);
+  const numDiam = Object.keys(byDiam).filter(d=>byDiam[d]>0).length;
+  const firstKpi = isAll
+    ? `<div class="kpi-card"><div class="kpi-label">โปรเจกต์ทั้งหมด</div><div class="kpi-val blue">${numProj}</div><div class="kpi-unit">โปรเจกต์</div></div>`
+    : `<div class="kpi-card"><div class="kpi-label">โครงการ</div><div class="kpi-val blue" style="font-size:16px;line-height:1.3">${proj[0]?.name||'—'}</div><div class="kpi-unit">${proj[0]?.location||'รายโครงการ'}</div></div>`;
+  document.getElementById('sum-kpi').innerHTML=
+    firstKpi+`
+    <div class="kpi-card"><div class="kpi-label">รายการโครงสร้าง</div><div class="kpi-val purple">${numMem}</div><div class="kpi-unit">ชิ้น</div></div>
+    <div class="kpi-card"><div class="kpi-label">น้ำหนักเหล็กรวม</div><div class="kpi-val green">${Number(wKg).toLocaleString()}</div><div class="kpi-unit">กิโลกรัม</div></div>
+    <div class="kpi-card"><div class="kpi-label">น้ำหนักรวม (ตัน)</div><div class="kpi-val amber">${wTon}</div><div class="kpi-unit">เมตริกตัน</div></div>
+    <div class="kpi-card"><div class="kpi-label">ขนาดเหล็กที่ใช้</div><div class="kpi-val blue">${numDiam}</div><div class="kpi-unit">ขนาด</div></div>
+  `;
+
+  // ── Bar chart by diameter ──
+  const diamKeys = Object.keys(byDiam).filter(d=>byDiam[d]>0).sort((a,b)=>+a-+b);
+  const maxW = Math.max(...diamKeys.map(d=>byDiam[d]),1);
+  const chartHTML = diamKeys.length ? diamKeys.map(d=>{
+    const pct = Math.max(4,(byDiam[d]/maxW)*100);
+    return `<div class="bar-row">
+      <div class="bar-label">DB${d}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%">${byDiam[d]>maxW*0.12?byDiam[d].toFixed(1)+' kg':''}</div></div>
+      <div class="bar-kg">${byDiam[d].toFixed(1)} kg</div>
+    </div>`;
+  }).join('') : '<div style="color:var(--text3);font-size:13px">ยังไม่มีข้อมูล</div>';
+  document.getElementById('sum-diam-chart').innerHTML = chartHTML;
+
+  // ── Diameter grid ──
+  document.getElementById('sum-diam-grid').innerHTML = diamKeys.length
+    ? diamKeys.map(d=>`
+      <div class="diam-card">
+        <div class="diam-badge">DB${d}</div>
+        <div class="diam-info">
+          <div class="diam-name">DB${d}</div>
+          <div class="diam-weight">${byDiam[d].toFixed(1)}</div>
+          <div class="diam-unit">กิโลกรัม</div>
+        </div>
+      </div>`).join('')
+    : '<div style="color:var(--text3);font-size:13px">ยังไม่มีข้อมูล</div>';
+
+  // ── By type table ──
+  const typeRows = Object.entries(byType)
+    .filter(([,v])=>v.count>0||v.weight>0)
+    .map(([t,v])=>{
+      const pct = totalWeight>0 ? (v.weight/totalWeight*100).toFixed(1) : '0.0';
+      return `<tr>
+        <td><span class="tag ${typeTag[t]||''}">${typeName[t]||t}</span></td>
+        <td class="mono">${v.count}</td>
+        <td class="mono">${v.weight.toFixed(1)}</td>
+        <td class="mono">${(v.weight/1000).toFixed(3)}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;background:var(--bg3);border-radius:3px;height:6px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;background:var(--blue);border-radius:3px"></div>
+            </div>
+            <span style="font-size:12px;color:var(--text2);min-width:36px">${pct}%</span>
+          </div>
+        </td>
+      </tr>`;
+    });
+  const typeTotalRow = `<tr class="total-row">
+    <td>รวมทั้งหมด</td>
+    <td class="mono">${totalMembers}</td>
+    <td class="mono">${totalWeight.toFixed(1)}</td>
+    <td class="mono">${(totalWeight/1000).toFixed(3)}</td>
+    <td>100%</td>
+  </tr>`;
+  document.getElementById('sum-type-tbody').innerHTML = typeRows.join('') + typeTotalRow;
+
+  // ── By project table ──
+  const projRows = Object.values(projMap)
+    .sort((a,b)=>b.weight-a.weight)
+    .map(p=>`<tr>
+      <td><a style="color:var(--blue);cursor:pointer;text-decoration:none" onclick="openProject('${p.id}','${esc(p.name)}','${esc(p.description||'')}','${esc(p.location||'')}')">${p.name}</a></td>
+      <td style="font-size:12px;color:var(--text3)">${p.location||'—'}</td>
+      <td class="mono">${p.counts.column}</td>
+      <td class="mono">${p.counts.beam}</td>
+      <td class="mono">${p.counts.slab}</td>
+      <td class="mono">${p.counts.footing}</td>
+      <td class="mono" style="color:var(--green)">${p.weight.toFixed(1)}</td>
+    </tr>`);
+  const projTotal = Object.values(projMap).reduce((s,p)=>({
+    column:s.column+p.counts.column, beam:s.beam+p.counts.beam,
+    slab:s.slab+p.counts.slab, footing:s.footing+p.counts.footing, weight:s.weight+p.weight
+  }),{column:0,beam:0,slab:0,footing:0,weight:0});
+  const projTotalRow = `<tr class="total-row">
+    <td colspan="2">รวม ${proj.length} โปรเจกต์</td>
+    <td class="mono">${projTotal.column}</td>
+    <td class="mono">${projTotal.beam}</td>
+    <td class="mono">${projTotal.slab}</td>
+    <td class="mono">${projTotal.footing}</td>
+    <td class="mono">${projTotal.weight.toFixed(1)}</td>
+  </tr>`;
+  document.getElementById('sum-proj-tbody').innerHTML = projRows.join('') + projTotalRow;
+
+  // ── All members table ──
+  const projNameMap = {};
+  proj.forEach(p=>{ projNameMap[p.id]=p.name; });
+  const memRows = mem.map(m=>{
+    const diams = [...new Set((m.rebars||[]).map(r=>`DB${r.diameter}`))].join(', ')||'—';
+    return `<tr>
+      <td style="font-size:12px;color:var(--text2)">${projNameMap[m.project_id]||'—'}</td>
+      <td style="font-weight:600">${m.name}</td>
+      <td><span class="tag ${typeTag[m.member_type]||''}">${typeName[m.member_type]||m.member_type}</span></td>
+      <td style="font-size:12px;color:var(--text3)">${m.floor||'—'}</td>
+      <td class="mono" style="color:var(--green)">${(m.total_weight_kg||0).toFixed(1)}</td>
+      <td style="font-size:12px;color:var(--text3);font-family:var(--mono)">${diams}</td>
+    </tr>`;
+  });
+  document.getElementById('sum-all-tbody').innerHTML = memRows.length
+    ? memRows.join('')
+    : '<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px">ยังไม่มีข้อมูล</td></tr>';
+}
+
+function exportSummaryCSV(){
+  if(!summaryData){ toast('ยังไม่มีข้อมูล','err'); return; }
+  const {proj,mem,byDiam,byType,projMap} = summaryData;
+  const typeName={column:'เสา',beam:'คาน',slab:'พื้น',footing:'ฐานราก'};
+  const projNameMap = {};
+  proj.forEach(p=>{ projNameMap[p.id]=p.name; });
+
+  let csv = '\uFEFF'; // BOM for Thai Excel
+
+  // Summary by diameter
+  csv += 'สรุปตามขนาดเหล็ก\n';
+  csv += 'ขนาด,น้ำหนัก (กก.),น้ำหนัก (ตัน)\n';
+  Object.keys(byDiam).sort((a,b)=>+a-+b).forEach(d=>{
+    if(byDiam[d]>0) csv += `DB${d},${byDiam[d].toFixed(2)},${(byDiam[d]/1000).toFixed(4)}\n`;
+  });
+
+  csv += '\nสรุปตามประเภทโครงสร้าง\n';
+  csv += 'ประเภท,จำนวน,น้ำหนัก (กก.)\n';
+  Object.entries(byType).filter(([,v])=>v.count>0).forEach(([t,v])=>{
+    csv += `${typeName[t]||t},${v.count},${v.weight.toFixed(2)}\n`;
+  });
+
+  csv += '\nสรุปตามโปรเจกต์\n';
+  csv += 'โปรเจกต์,สถานที่,เสา,คาน,พื้น,ฐานราก,น้ำหนัก (กก.)\n';
+  Object.values(projMap).forEach(p=>{
+    csv += `${p.name},${p.location||''},${p.counts.column},${p.counts.beam},${p.counts.slab},${p.counts.footing},${p.weight.toFixed(2)}\n`;
+  });
+
+  csv += '\nรายการทั้งหมด\n';
+  csv += 'โปรเจกต์,ชื่อ/รหัส,ประเภท,ชั้น,น้ำหนัก (กก.)\n';
+  mem.forEach(m=>{
+    csv += `${projNameMap[m.project_id]||''},${m.name},${typeName[m.member_type]||m.member_type},${m.floor||''},${(m.total_weight_kg||0).toFixed(2)}\n`;
+  });
+
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const scope = (summaryData.isAll===false && summaryData.proj[0]?.name)
+    ? summaryData.proj[0].name.replace(/[^\w\u0E00-\u0E7F]+/g,'_')
+    : 'AllProjects';
+  a.href=url; a.download=`SteelCalc_${scope}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Export CSV สำเร็จ ✓','ok');
+}
+
+// restore saved claude key
+const savedKey=localStorage.getItem('sc_claude_key');
+if(savedKey) document.getElementById('claude-key').value=savedKey;
+
+// ── External Tool Pages (popups) ──────────────────────────
+let aiWindow = null;
+let beamWindow = null;
+
+// shared popup feature string → forces a separate popup window, not a tab
+const POPUP_FEATURES = 'popup=yes,width=1180,height=860,menubar=no,toolbar=no,location=no,status=no';
+
+function openAIPage(){
+  if(!currentProject) return toast('กรุณาเปิดโปรเจกต์ก่อน','err');
+  const payload = {
+    projectId: currentProject.id,
+    projectName: currentProject.name,
+    userId: currentUser?.id
+  };
+  sessionStorage.setItem('sc_ai_context', JSON.stringify(payload));
+  // reuse the window if already open
+  if(aiWindow && !aiWindow.closed){ aiWindow.focus(); return; }
+  aiWindow = window.open('quantitake_v2.html','sc_quantitake', POPUP_FEATURES);
+  if(!aiWindow) return toast('เบราว์เซอร์บล็อก popup — กรุณาอนุญาต popup สำหรับเว็บนี้','err');
+  toast('เปิด QuantiTake แล้ว — กด "บันทึกเข้า Steel Calc" เพื่อส่งข้อมูลกลับ','ok');
+}
+
+function openBeamPage(){
+  if(!currentProject) return toast('กรุณาเปิดโปรเจกต์ก่อน','err');
+  const payload = {
+    projectId: currentProject.id,
+    projectName: currentProject.name,
+    userId: currentUser?.id
+  };
+  sessionStorage.setItem('sc_ai_context', JSON.stringify(payload));
+  if(beamWindow && !beamWindow.closed){ beamWindow.focus(); return; }
+  beamWindow = window.open('beam_design_v2.html','sc_beam', POPUP_FEATURES);
+  if(!beamWindow) return toast('เบราว์เซอร์บล็อก popup — กรุณาอนุญาต popup สำหรับเว็บนี้','err');
+  toast('เปิด Beam Design แล้ว — กด "บันทึกเข้า Steel Calc" เพื่อส่งข้อมูลกลับ','ok');
+}
+
+// Listen for data posted back from popup tools (QuantiTake / Beam Design)
+window.addEventListener('message', async (event) => {
+  if(event.data?.type !== 'SC_AI_SAVE') return;
+  const { members, projectId, source } = event.data;
+  if(!members?.length) return;
+  if(!currentProject) return toast('ไม่พบโปรเจกต์ปัจจุบัน','err');
+  // safety: ignore messages meant for a different project
+  if(projectId && projectId !== currentProject.id){
+    return toast('ข้อมูลไม่ตรงกับโปรเจกต์ที่เปิดอยู่','err');
+  }
+
+  const srcLabel = source==='beam' ? 'Beam Design' : source==='quantitake' ? 'QuantiTake' : 'AI';
+  toast(`⏳ กำลังบันทึก ${members.length} รายการจาก ${srcLabel}...`);
+  let saved = 0, failed = 0;
+  for(const m of members){
+    try{
+      const {error} = await db.from('members').insert({
+        project_id: currentProject.id,
+        user_id: currentUser.id,
+        member_type: m.member_type || 'beam',
+        name: m.name,
+        floor: m.floor || null,
+        rebars: m.rebars || [],
+        total_weight_kg: parseFloat((m.total_weight_kg||0).toFixed(2)),
+        notes: m.notes || null,
+        ai_raw: m.ai_raw || null
+      });
+      if(error) throw error;
+      saved++;
+    }catch{ failed++; }
+  }
+  await db.from('projects').update({updated_at:new Date().toISOString()}).eq('id',currentProject.id);
+  loadMembers();
+  const msg = failed
+    ? `✓ บันทึก ${saved} รายการ (ล้มเหลว ${failed})`
+    : `✓ บันทึก ${saved} รายการจาก ${srcLabel} สำเร็จ`;
+  toast(msg, failed ? 'err' : 'ok');
+});
+</script>
+</body>
+</html>
