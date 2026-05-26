@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Svaðilfari — reinforced concrete</title>
+<title>Svaðilfari — the constructor’s best friend</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -268,8 +268,8 @@ input[type=file]{padding:6px;cursor:pointer;font-size:13px}
   <div class="auth-shell">
     <div class="auth-card">
       <div class="auth-logo">
-        <div class="auth-logo-box">SC</div>
-        <span class="auth-logo-text">Steel Calc</span>
+        <div class="auth-logo-box" id="auth-logo-short"></div>
+        <span class="auth-logo-text" id="auth-logo-name"></span>
       </div>
       <!-- LOGIN form -->
       <div id="form-login">
@@ -283,7 +283,7 @@ input[type=file]{padding:6px;cursor:pointer;font-size:13px}
       <!-- REGISTER form -->
       <div id="form-register" style="display:none">
         <h2>สมัครสมาชิก</h2>
-        <p>สร้างบัญชีเพื่อใช้งาน Steel Calc</p>
+        <p>สร้างบัญชีเพื่อใช้งาน <span id="reg-app-name"></span></p>
         <div class="field"><label>ชื่อ</label><input id="reg-name" type="text" placeholder="ชื่อ-นามสกุล"></div>
         <div class="field"><label>อีเมล</label><input id="reg-email" type="email" placeholder="email@example.com"></div>
         <div class="field"><label>รหัสผ่าน</label><input id="reg-pass" type="password" placeholder="อย่างน้อย 6 ตัวอักษร"></div>
@@ -298,7 +298,7 @@ input[type=file]{padding:6px;cursor:pointer;font-size:13px}
   NAV (shared, hidden on auth)
 ══════════════════════════════════ -->
 <nav id="main-nav" style="display:none">
-  <div class="nav-logo"><div class="nav-logo-box">SC</div>Steel Calc</div>
+  <div class="nav-logo"><div class="nav-logo-box" id="nav-logo-short"></div><span id="nav-logo-name"></span></div>
   <div class="nav-right">
     <button class="btn btn-ghost btn-sm" onclick="goSummary()" title="สรุปวัสดุทั้งหมด">📊 Sum up</button>
     <span class="nav-user" id="nav-user-email"></span>
@@ -340,7 +340,7 @@ input[type=file]{padding:6px;cursor:pointer;font-size:13px}
     </div>
     <button class="btn btn-ghost btn-sm" id="btn-open-ai" onclick="openAIPage()" title="ใช้ AI ถอดแบบจากรูปแบบ (QuantiTake)" style="border-color:rgba(34,211,238,.4);color:#22d3ee">🤖 AI ถอดแบบ</button>
     <button class="btn btn-ghost btn-sm" id="btn-open-beam" onclick="openBeamPage()" title="ออกแบบคาน คสล. (Beam Design)" style="border-color:rgba(240,136,62,.4);color:#f0883e">🏗 ออกแบบคาน</button>
-    
+
   </div>
   <!-- content -->
   <div class="shell" style="padding-top:16px">
@@ -467,78 +467,21 @@ input[type=file]{padding:6px;cursor:pointer;font-size:13px}
   </div>
 </div>
 
-<!-- New/Edit Member -->
-<div class="modal-overlay" id="modal-new-member">
-  <div class="modal">
-    <h3 id="member-modal-title">เพิ่มเสา / คาน</h3>
-    <div class="modal-sub">กรอกข้อมูลหรือให้ AI ถอดจากรูปแบบ</div>
-
-    <!-- AI Scan -->
-    <div class="ai-panel">
-      <div class="ai-panel-head">✨ AI ถอดจากรูปแบบ</div>
-      <div class="upload-zone" id="ai-upload-zone">
-        <input type="file" id="ai-file" accept="image/*,.pdf" onchange="handleAIFile(this)">
-        <span class="upload-zone-icon">📐</span>
-        <div class="upload-zone-text">วางรูปแบบ/PDF หรือคลิกเลือก</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:3px">JPG, PNG, PDF</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <input id="claude-key" type="password" placeholder="Anthropic API Key (sk-ant-...)" style="flex:1;font-size:13px">
-        <button class="btn btn-primary btn-sm" id="btn-ai-scan" onclick="runAIScan()">ถอดแบบ</button>
-      </div>
-      <div id="ai-status" style="font-size:12px;color:var(--text3);margin-top:6px"></div>
-    </div>
-
-    <!-- Basic info -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div class="field"><label>ประเภท *</label>
-        <select id="m-type">
-          <option value="column">🏛 เสา (Column)</option>
-          <option value="beam">📏 คาน (Beam)</option>
-          <option value="slab">⬛ พื้น (Slab)</option>
-          <option value="footing">🔩 ฐานราก</option>
-        </select>
-      </div>
-      <div class="field"><label>ชั้น / ตำแหน่ง</label><input id="m-floor" type="text" placeholder="เช่น 1F, RF"></div>
-    </div>
-    <div class="field"><label>ชื่อ/รหัส *</label><input id="m-name" type="text" placeholder="เช่น C1, C2, B-GL1"></div>
-    <div class="field"><label>หมายเหตุ</label><input id="m-notes" type="text" placeholder="ข้อมูลเพิ่มเติม"></div>
-
-    <!-- Rebar rows -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <span style="font-size:13px;font-weight:500">รายการเหล็ก</span>
-      <button class="btn btn-ghost btn-sm" onclick="addRebarRow()">＋ เพิ่มแถว</button>
-    </div>
-    <div style="overflow-x:auto">
-      <table class="rebar-table" id="rebar-input-table">
-        <thead><tr>
-          <th>Mark</th><th>ขนาด (มม.)</th><th>ยาว (มม.)</th><th>จำนวน</th><th>น้ำหนัก (กก.)</th><th></th>
-        </tr></thead>
-        <tbody id="rebar-tbody"></tbody>
-      </table>
-    </div>
-    <div style="text-align:right;font-size:13px;color:var(--green);margin-top:4px">
-      น้ำหนักรวม: <strong id="modal-total-weight">0.00</strong> กก.
-    </div>
-
-    <!-- Image upload -->
-    <div class="field" style="margin-top:12px">
-      <label>แนบรูปแบบ (ไม่บังคับ)</label>
-      <input type="file" id="m-image" accept="image/*" onchange="previewImage(this)">
-      <img id="m-image-preview" style="max-width:100%;border-radius:8px;margin-top:8px;display:none;border:1px solid var(--border)">
-    </div>
-
-    <div class="modal-btns">
-      <button class="btn btn-ghost btn-sm" onclick="closeMemberModal()">ยกเลิก</button>
-      <button class="btn btn-primary btn-sm" id="btn-save-member" onclick="saveMember()">บันทึก</button>
-    </div>
-  </div>
-</div>
 
 <!-- ══════════════════════════════════
   SCRIPTS
 ══════════════════════════════════ -->
 <script>
+// ── App Name ──────────────────────────────────────────────
+const web_name = 'Svadilfari';
+const web_name_short = 'KU';
+
+// inject name into DOM
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('#auth-logo-short,#nav-logo-short').forEach(el => el.textContent = web_name_short);
+  document.querySelectorAll('#auth-logo-name,#nav-logo-name,#reg-app-name').forEach(el => el.textContent = web_name);
+});
+
 // ── Supabase Init ─────────────────────────────────────────
 const SUPA_URL = 'https://rgzfkmpulyrqtctvimtn.supabase.co';
 const SUPA_KEY = 'sb_publishable_0mdDY6zPN3WsqyCij7eWzA_jto1lMp4';
@@ -550,7 +493,6 @@ let currentUser = null;
 let currentProject = null;
 let allMembers = [];
 let currentFilter = 'all';
-let editingMemberId = null;
 
 // Rebar weight per meter (กก./ม.)
 const REBAR_WEIGHT = {6:.222,9:.499,10:.617,12:.888,16:1.578,20:2.466,25:3.853,28:4.834,32:6.313};
@@ -704,7 +646,7 @@ function renderMembers(){
   const c=document.getElementById('members-container');
   const filtered = currentFilter==='all' ? allMembers : allMembers.filter(m=>m.member_type===currentFilter);
   if(!filtered.length){
-    c.innerHTML=`<div class="empty"><span class="empty-icon">📋</span><h3>ไม่มีรายการ</h3><p>กด "เพิ่มเสา/คาน" เพื่อเพิ่มรายการแรก</p></div>`;
+    c.innerHTML=`<div class="empty"><span class="empty-icon">📋</span><h3>ไม่มีรายการ</h3><p>ยังไม่มีรายการเสา/คานในโปรเจกต์นี้</p></div>`;
     return;
   }
   c.innerHTML = filtered.map(m=>memberCardHTML(m)).join('');
@@ -748,7 +690,6 @@ function memberCardHTML(m){
       ${m.notes?`<div style="font-size:12px;color:var(--text2);margin-top:6px">📝 ${m.notes}</div>`:''}
       ${m.image_url?`<div class="drawing-preview"><img src="${m.image_url}" alt="แบบ" loading="lazy"></div>`:''}
       <div class="member-actions">
-        <button class="btn btn-ghost btn-sm" onclick="openEditMember('${m.id}')">✏ แก้ไข</button>
         <button class="btn btn-danger btn-sm" onclick="deleteMember('${m.id}','${esc(m.name)}')">🗑 ลบ</button>
       </div>
     </div>
@@ -760,88 +701,6 @@ function toggleMember(id){
   card.classList.toggle('open');
 }
 
-// ── Save Member ───────────────────────────────────────────
-function openEditMember(id){
-  const m=allMembers.find(x=>x.id===id);
-  if(!m) return;
-  editingMemberId=id;
-  document.getElementById('member-modal-title').textContent='แก้ไข '+m.name;
-  document.getElementById('m-type').value=m.member_type;
-  document.getElementById('m-floor').value=m.floor||'';
-  document.getElementById('m-name').value=m.name;
-  document.getElementById('m-notes').value=m.notes||'';
-  // load rebars
-  const tbody=document.getElementById('rebar-tbody');
-  tbody.innerHTML='';
-  (m.rebars||[]).forEach(r=>addRebarRow(r));
-  recalcTotal();
-  if(m.image_url){
-    const img=document.getElementById('m-image-preview');
-    img.src=m.image_url; img.style.display='block';
-  }
-  openModal('modal-new-member');
-}
-
-function closeMemberModal(){
-  editingMemberId=null;
-  document.getElementById('member-modal-title').textContent='เพิ่มเสา / คาน';
-  clearFields(['m-type','m-floor','m-name','m-notes','ai-status']);
-  document.getElementById('rebar-tbody').innerHTML='';
-  document.getElementById('m-image-preview').style.display='none';
-  document.getElementById('m-image').value='';
-  document.getElementById('ai-file').value='';
-  document.getElementById('modal-total-weight').textContent='0.00';
-  closeModal('modal-new-member');
-}
-
-async function saveMember(){
-  const name=v('m-name');
-  if(!name) return toast('กรุณาใส่ชื่อ/รหัส','err');
-  const rebars=collectRebars();
-  const totalWeight=rebars.reduce((s,r)=>s+(r.weight_kg||0),0);
-  setBtnLoading('btn-save-member',true);
-  try{
-    // upload image if selected
-    let imageUrl=null;
-    const imgFile=document.getElementById('m-image').files[0];
-    if(imgFile){
-      const ext=imgFile.name.split('.').pop();
-      const path=`${currentUser.id}/${Date.now()}.${ext}`;
-      const {error:upErr}=await db.storage.from('drawings').upload(path,imgFile,{upsert:true});
-      if(upErr) throw upErr;
-      const {data:urlData}=db.storage.from('drawings').getPublicUrl(path);
-      imageUrl=urlData.publicUrl;
-    }
-
-    const payload={
-      project_id:currentProject.id,
-      user_id:currentUser.id,
-      member_type:v('m-type'),
-      floor:v('m-floor')||null,
-      name,
-      rebars,
-      total_weight_kg:parseFloat(totalWeight.toFixed(2)),
-      notes:v('m-notes')||null,
-      ...(imageUrl?{image_url:imageUrl}:{})
-    };
-
-    if(editingMemberId){
-      const {error}=await db.from('members').update(payload).eq('id',editingMemberId);
-      if(error) throw error;
-      toast('อัพเดตสำเร็จ ✓','ok');
-    } else {
-      const {error}=await db.from('members').insert(payload);
-      if(error) throw error;
-      toast('บันทึกสำเร็จ ✓','ok');
-    }
-    // update project updated_at
-    await db.from('projects').update({updated_at:new Date().toISOString()}).eq('id',currentProject.id);
-    closeMemberModal();
-    loadMembers();
-  }catch(e){ toast('บันทึกไม่สำเร็จ: '+e.message,'err'); }
-  finally{ setBtnLoading('btn-save-member',false); }
-}
-
 async function deleteMember(id,name){
   if(!confirm(`ลบ "${name}" ใช่ไหม?`)) return;
   try{
@@ -850,145 +709,6 @@ async function deleteMember(id,name){
     toast('ลบแล้ว','ok');
     loadMembers();
   }catch(e){ toast('ลบไม่สำเร็จ: '+e.message,'err'); }
-}
-
-// ── Rebar rows ────────────────────────────────────────────
-function addRebarRow(data={}){
-  const tbody=document.getElementById('rebar-tbody');
-  const tr=document.createElement('tr');
-  const diams=[6,9,10,12,16,20,25,28,32];
-  const opts=diams.map(d=>`<option value="${d}" ${d==data.diameter?'selected':''}>${d}</option>`).join('');
-  tr.innerHTML=`
-    <td><input type="text"   class="rb-mark"   value="${data.mark||''}"       placeholder="T1" style="width:50px"></td>
-    <td><select class="rb-diam" onchange="recalcRow(this)">${opts}</select></td>
-    <td><input type="number" class="rb-len"    value="${data.length_mm||''}"  placeholder="6000" min="1" onchange="recalcRow(this)" style="width:80px"></td>
-    <td><input type="number" class="rb-qty"    value="${data.quantity||1}"    placeholder="1"    min="1" onchange="recalcRow(this)" style="width:55px"></td>
-    <td><input type="number" class="rb-wt"     value="${data.weight_kg?data.weight_kg.toFixed(2):''}" readonly placeholder="auto" style="width:70px;color:var(--green)"></td>
-    <td><button class="btn btn-ghost btn-sm btn-icon" onclick="this.closest('tr').remove();recalcTotal()">✕</button></td>
-  `;
-  tbody.appendChild(tr);
-  recalcRow(tr.querySelector('.rb-diam'));
-}
-
-function recalcRow(el){
-  const tr=el.closest('tr');
-  const diam=parseInt(tr.querySelector('.rb-diam').value);
-  const len=parseFloat(tr.querySelector('.rb-len').value)||0;
-  const qty=parseInt(tr.querySelector('.rb-qty').value)||0;
-  const wpm=REBAR_WEIGHT[diam]||0;
-  const w=(len/1000)*qty*wpm;
-  tr.querySelector('.rb-wt').value=w>0?w.toFixed(2):'';
-  recalcTotal();
-}
-
-function recalcTotal(){
-  let total=0;
-  document.querySelectorAll('#rebar-tbody tr').forEach(tr=>{
-    total+=parseFloat(tr.querySelector('.rb-wt').value)||0;
-  });
-  document.getElementById('modal-total-weight').textContent=total.toFixed(2);
-}
-
-function collectRebars(){
-  const rows=[];
-  document.querySelectorAll('#rebar-tbody tr').forEach(tr=>{
-    const len=parseFloat(tr.querySelector('.rb-len').value);
-    const qty=parseInt(tr.querySelector('.rb-qty').value);
-    if(!len||!qty) return;
-    rows.push({
-      mark:tr.querySelector('.rb-mark').value||'',
-      diameter:parseInt(tr.querySelector('.rb-diam').value),
-      length_mm:len, quantity:qty,
-      weight_kg:parseFloat(tr.querySelector('.rb-wt').value)||0,
-      note:''
-    });
-  });
-  return rows;
-}
-
-// ── AI Scanner ────────────────────────────────────────────
-let aiFileData=null;
-function handleAIFile(input){
-  const file=input.files[0];
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=()=>{aiFileData={base64:reader.result.split(',')[1],mime:file.type||'image/jpeg',name:file.name};};
-  reader.readAsDataURL(file);
-  document.getElementById('ai-upload-zone').style.borderColor='var(--green)';
-  // also preview if image
-  if(file.type.startsWith('image/')){
-    const img=document.getElementById('m-image-preview');
-    img.src=URL.createObjectURL(file); img.style.display='block';
-  }
-}
-
-async function runAIScan(){
-  if(!aiFileData) return toast('กรุณาเลือกไฟล์แบบก่อน','err');
-  const key=document.getElementById('claude-key').value.trim();
-  if(!key) return toast('กรุณาใส่ Anthropic API Key','err');
-  localStorage.setItem('sc_claude_key',key);
-
-  const status=document.getElementById('ai-status');
-  setBtnLoading('btn-ai-scan',true);
-  status.textContent='⏳ AI กำลังวิเคราะห์แบบ...';
-
-  const prompt=`คุณคือผู้เชี่ยวชาญถอดแบบเหล็กเสริมคอนกรีตมาตรฐานไทย
-วิเคราะห์แบบและตอบด้วย JSON เท่านั้น ห้ามมี text อื่น:
-{
-  "member_type": "column|beam|slab|footing",
-  "name": "ชื่อ/รหัส เช่น C1",
-  "floor": "ชั้น เช่น 1F",
-  "rebars": [
-    {"mark":"T1","diameter":16,"length_mm":6000,"quantity":8,"note":""}
-  ],
-  "notes": "หมายเหตุ"
-}
-น้ำหนักต่อเมตร: RB6=0.222,RB9=0.499,DB10=0.617,DB12=0.888,DB16=1.578,DB20=2.466,DB25=3.853,DB28=4.834,DB32=6.313`;
-
-  try{
-    const isPdf=aiFileData.mime==='application/pdf';
-    const contentItem=isPdf
-      ?{type:'document',source:{type:'base64',media_type:'application/pdf',data:aiFileData.base64}}
-      :{type:'image',source:{type:'base64',media_type:aiFileData.mime,data:aiFileData.base64}};
-
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify({model:'claude-opus-4-5',max_tokens:2000,system:prompt,
-        messages:[{role:'user',content:[contentItem,{type:'text',text:'ถอดรายการเหล็กเสริมทั้งหมดจากแบบนี้'}]}]})
-    });
-    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error?.message||'API Error '+res.status);}
-    const data=await res.json();
-    const raw=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
-    const clean=raw.replace(/```json|```/g,'').trim();
-    let parsed;
-    try{ parsed=JSON.parse(clean); }
-    catch{ const m=raw.match(/\{[\s\S]*\}/); parsed=m?JSON.parse(m[0]):null; }
-    if(!parsed) throw new Error('AI ตอบกลับในรูปแบบที่ไม่ถูกต้อง');
-
-    // populate form
-    if(parsed.member_type) document.getElementById('m-type').value=parsed.member_type;
-    if(parsed.name) document.getElementById('m-name').value=parsed.name;
-    if(parsed.floor) document.getElementById('m-floor').value=parsed.floor;
-    if(parsed.notes) document.getElementById('m-notes').value=parsed.notes;
-    document.getElementById('rebar-tbody').innerHTML='';
-    (parsed.rebars||[]).forEach(r=>addRebarRow(r));
-    recalcTotal();
-    status.style.color='var(--green)';
-    status.textContent='✓ AI ถอดแบบสำเร็จ กรุณาตรวจสอบก่อนบันทึก';
-  }catch(e){
-    status.style.color='var(--red)';
-    status.textContent='⚠ '+e.message;
-  }finally{ setBtnLoading('btn-ai-scan',false); }
-}
-
-// ── Image preview ─────────────────────────────────────────
-function previewImage(input){
-  const file=input.files[0];
-  if(!file) return;
-  const img=document.getElementById('m-image-preview');
-  img.src=URL.createObjectURL(file);
-  img.style.display='block';
 }
 
 // ── UI Helpers ────────────────────────────────────────────
@@ -1303,9 +1023,6 @@ function exportSummaryCSV(){
   toast('Export CSV สำเร็จ ✓','ok');
 }
 
-// restore saved claude key
-const savedKey=localStorage.getItem('sc_claude_key');
-if(savedKey) document.getElementById('claude-key').value=savedKey;
 
 // ── External Tool Pages (popups) ──────────────────────────
 let aiWindow = null;
@@ -1326,7 +1043,7 @@ function openAIPage(){
   if(aiWindow && !aiWindow.closed){ aiWindow.focus(); return; }
   aiWindow = window.open('quantitake_v2.html','sc_quantitake', POPUP_FEATURES);
   if(!aiWindow) return toast('เบราว์เซอร์บล็อก popup — กรุณาอนุญาต popup สำหรับเว็บนี้','err');
-  toast('เปิด QuantiTake แล้ว — กด "บันทึกเข้า Steel Calc" เพื่อส่งข้อมูลกลับ','ok');
+  toast(`เปิด QuantiTake แล้ว — กด "บันทึกเข้า ${web_name}" เพื่อส่งข้อมูลกลับ`,'ok');
 }
 
 function openBeamPage(){
@@ -1340,7 +1057,7 @@ function openBeamPage(){
   if(beamWindow && !beamWindow.closed){ beamWindow.focus(); return; }
   beamWindow = window.open('beam_design_v2.html','sc_beam', POPUP_FEATURES);
   if(!beamWindow) return toast('เบราว์เซอร์บล็อก popup — กรุณาอนุญาต popup สำหรับเว็บนี้','err');
-  toast('เปิด Beam Design แล้ว — กด "บันทึกเข้า Steel Calc" เพื่อส่งข้อมูลกลับ','ok');
+  toast(`เปิด Beam Design แล้ว — กด "บันทึกเข้า ${web_name}" เพื่อส่งข้อมูลกลับ`,'ok');
 }
 
 // Listen for data posted back from popup tools (QuantiTake / Beam Design)
