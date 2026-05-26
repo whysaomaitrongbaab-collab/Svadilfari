@@ -44,7 +44,8 @@ nav{
   display:flex;align-items:center;padding:0 24px;height:54px;gap:12px;
 }
 .nav-logo{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:15px;color:var(--blue);letter-spacing:.04em}
-.nav-logo-box{width:30px;height:30px;background:var(--blue2);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.nav-logo-box{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.nav-logo-box img{width:100%;height:100%;object-fit:cover;border-radius:7px}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .nav-user{font-size:12px;color:var(--text2)}
 
@@ -74,7 +75,8 @@ input[type=file]{padding:6px;cursor:pointer;font-size:13px}
 .auth-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(ellipse at 50% -20%,rgba(59,130,246,.1) 0%,transparent 60%)}
 .auth-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:38px 34px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.5)}
 .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:26px}
-.auth-logo-box{width:38px;height:38px;background:var(--blue2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;font-family:var(--mono)}
+.auth-logo-box{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.auth-logo-box img{width:100%;height:100%;object-fit:cover;border-radius:9px}
 .auth-logo-text{font-family:var(--mono);font-size:18px;color:var(--blue);letter-spacing:.04em}
 .auth-card h2{font-size:20px;margin-bottom:4px}
 .auth-card p{font-size:13px;color:var(--text2);margin-bottom:24px}
@@ -478,7 +480,9 @@ const web_name_short = 'KU';
 
 // inject name into DOM
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('#auth-logo-short,#nav-logo-short').forEach(el => el.textContent = web_name_short);
+  document.querySelectorAll('#auth-logo-short,#nav-logo-short').forEach(el => {
+    el.innerHTML = '<img src="circle.png" alt="logo">';
+  });
   document.querySelectorAll('#auth-logo-name,#nav-logo-name,#reg-app-name').forEach(el => el.textContent = web_name);
 });
 
